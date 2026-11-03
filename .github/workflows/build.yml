@@ -1,0 +1,69 @@
+name: Build Zmusic APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # Pinned: "ubuntu-latest" is moving to a newer image that may not ship the Android SDK.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          gradle-version: 8.11.1
+
+      - name: Accept Android SDK licenses
+        shell: bash
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      # Fast, optimized build. Install this one.
+      - name: Build release APK
+        id: release
+        continue-on-error: true
+        shell: bash
+        run: gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee release.log
+
+      # Safety net so you still get an APK if release ever fails.
+      - name: Build fallback APK
+        id: fallback
+        continue-on-error: true
+        shell: bash
+        run: gradle assembleDebug --no-daemon --stacktrace 2>&1 | tee fallback.log
+
+      # Puts the real reason in the red annotations at the top of the run page.
+      - name: Show the real error
+        if: steps.release.outcome == 'failure' || steps.fallback.outcome == 'failure'
+        shell: bash
+        run: |
+          for f in fallback.log release.log; do
+            [ -f "$f" ] || continue
+            echo "=== $f ==="
+            grep -hE "^e: |error:|What went wrong|Execution failed|Could not|licen[cs]e|not found" -A2 "$f" | head -25 | while IFS= read -r line; do
+              echo "::error::$line"
+            done
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Zmusic-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Zmusic-fallback-apk-slower
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Fail the run if nothing was built
+        if: steps.release.outcome == 'failure' && steps.fallback.outcome == 'failure'
+        run: exit 1
