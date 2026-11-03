@@ -24,9 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,7 +58,11 @@ fun WelcomeScreen(onContinue: () -> Unit) {
             Box(
                 Modifier
                     .size(196.dp)
-                    .graphicsLayer { rotationZ = rotation; scaleX = pulse; scaleY = pulse }
+                    .graphicsLayer {
+                        rotationZ = rotation
+                        scaleX = pulse
+                        scaleY = pulse
+                    }
                     .background(
                         Brush.radialGradient(listOf(Glass.Aqua.copy(alpha = 0.35f), Glass.Violet.copy(alpha = 0.28f), Glass.Ink)),
                         CircleShape,

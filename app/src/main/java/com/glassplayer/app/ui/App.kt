@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.glassplayer.app.PlayerViewModel
 import com.glassplayer.app.audioPermission
+import com.glassplayer.app.data.Song
 import com.glassplayer.app.hasAudioPermission
 
 private fun permissionsToAsk(): Array<String> =
@@ -104,9 +105,17 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0).coerceIn(0, 2)) }
         val displaySongs = remember(songs, sortMode) {
             when (sortMode) {
-                1 -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.artist }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
-                2 -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.album }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
-                else -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.title })
+                1 -> songs.sortedWith { a: Song, b: Song ->
+                    a.artist.compareTo(b.artist, ignoreCase = true).takeIf { it != 0 }
+                        ?: a.title.compareTo(b.title, ignoreCase = true)
+                }
+                2 -> songs.sortedWith { a: Song, b: Song ->
+                    a.album.compareTo(b.album, ignoreCase = true).takeIf { it != 0 }
+                        ?: a.title.compareTo(b.title, ignoreCase = true)
+                }
+                else -> songs.sortedWith { a: Song, b: Song ->
+                    a.title.compareTo(b.title, ignoreCase = true)
+                }
             }
         }
         val albums = remember(songs) { albumsOf(songs) }
