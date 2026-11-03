@@ -86,6 +86,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         )
     ) {
         val context = LocalContext.current
+        val prefs = remember(context) { context.getSharedPreferences("zmusic", Context.MODE_PRIVATE) }
         var granted by remember { mutableStateOf(hasAudioPermission(context)) }
         val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
             granted = hasAudioPermission(context)
@@ -100,11 +101,22 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         val current = remember(songs, ui.currentId) { songs.firstOrNull { it.id == ui.currentId } }
         val accent = remember(current?.album, current?.artist) { accentFor(current) }
 
+        var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0).coerceIn(0, 2)) }
+        val displaySongs = remember(songs, sortMode) {
+            when (sortMode) {
+                1 -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.artist }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                2 -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.album }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                else -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+            }
+        }
         val albums = remember(songs) { albumsOf(songs) }
         val artists = remember(songs) { artistsOf(songs) }
 
         var tab by rememberSaveable { mutableIntStateOf(0) }
         var playerOpen by rememberSaveable { mutableStateOf(false) }
+        var showWelcome by rememberSaveable {
+            mutableStateOf(!prefs.getBoolean("welcomeSeen", false))
+        }
         var detail by remember { mutableStateOf<SongGroup?>(null) }
         var detailIsArtist by remember { mutableStateOf(false) }
 
@@ -112,8 +124,9 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         val albumsGrid = rememberLazyGridState()
         val artistsList = rememberLazyListState()
 
-        BackHandler(enabled = playerOpen) { playerOpen = false }
-        BackHandler(enabled = !playerOpen && detail != null) { detail = null }
+        BackHandler(enabled = showWelcome) { }
+        BackHandler(enabled = !showWelcome && playerOpen) { playerOpen = false }
+        BackHandler(enabled = !showWelcome && !playerOpen && detail != null) { detail = null }
         LaunchedEffect(current == null) { if (current == null) playerOpen = false }
         LaunchedEffect(current != null) { if (current != null) askBatteryExemptionOnce(context) }
 
@@ -137,7 +150,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             } else {
                 when (tab) {
                     0 -> SongsScreen(
-                        songs, loaded, ui, accent, songsList, pad,
+                        displaySongs, loaded, ui, accent, songsList, pad,
                         onPlay = vm::playQueue, onShuffle = vm::playShuffled,
                     )
                     1 -> AlbumsScreen(albums, albumsGrid, pad) {
@@ -148,7 +161,18 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                         detailIsArtist = true
                         detail = it
                     }
-                    else -> SearchScreen(songs, ui, accent, pad, onPlay = vm::playQueue)
+                    3 -> SearchScreen(displaySongs, ui, accent, pad, onPlay = vm::playQueue)
+                    else -> SettingsScreen(
+                        songCount = songs.size,
+                        sortMode = sortMode,
+                        onSortModeChange = {
+                            sortMode = it
+                            prefs.edit().putInt("sortMode", it).apply()
+                        },
+                        onRefresh = vm::refresh,
+                        onReplayWelcome = { showWelcome = true },
+                        pad = pad,
+                    )
                 }
 
                 AnimatedVisibility(
@@ -210,6 +234,17 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                         onShuffle = vm::toggleShuffle,
                         onRepeat = vm::cycleRepeat,
                     )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showWelcome,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                WelcomeScreen {
+                    prefs.edit().putBoolean("welcomeSeen", true).apply()
+                    showWelcome = false
                 }
             }
         }
