@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
         if (lp.preferredDisplayModeId == best.modeId) return
         lp.preferredDisplayModeId = best.modeId
         lp.preferredRefreshRate = best.refreshRate
-        if (Build.VERSION.SDK_INT >= 34) lp.preferredMinDisplayRefreshRate = best.refreshRate
         window.attributes = lp
     }
 }
