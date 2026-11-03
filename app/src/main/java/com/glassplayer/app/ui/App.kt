@@ -104,9 +104,9 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0).coerceIn(0, 2)) }
         val displaySongs = remember(songs, sortMode) {
             when (sortMode) {
-                1 -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.artist }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
-                2 -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.album }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
-                else -> songs.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                1 -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.artist }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                2 -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.album }.thenBy(String.CASE_INSENSITIVE_ORDER) { it.title })
+                else -> songs.sortedWith(compareBy<Song>(String.CASE_INSENSITIVE_ORDER) { it.title })
             }
         }
         val albums = remember(songs) { albumsOf(songs) }
