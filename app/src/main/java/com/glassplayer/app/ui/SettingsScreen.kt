@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.SortByAlpha
 import androidx.compose.material.icons.rounded.WavingHand
@@ -32,8 +34,11 @@ import com.glassplayer.app.data.Song
 fun SettingsScreen(
     songCount: Int,
     sortMode: Int,
+    currentSong: Song?,
     onSortModeChange: (Int) -> Unit,
     onRefresh: () -> Unit,
+    onRenameCurrent: () -> Unit,
+    onDeleteCurrent: () -> Unit,
     onReplayWelcome: () -> Unit,
     pad: androidx.compose.foundation.layout.PaddingValues,
 ) {
@@ -61,6 +66,12 @@ fun SettingsScreen(
             }
             GText("Sort songs by", size = 13.sp, color = Glass.TextLo)
             GlassPillButton("Rescan music", Icons.Rounded.Refresh, onRefresh, tint = Glass.Violet)
+            if (currentSong != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GlassPillButton("Rename current", Icons.Rounded.Edit, onRenameCurrent, tint = Glass.Coral)
+                    GlassPillButton("Delete current", Icons.Rounded.Delete, onDeleteCurrent, tint = Glass.Coral)
+                }
+            }
         }
 
         Column(
