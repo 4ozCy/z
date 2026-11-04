@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
+import android.provider.DocumentsContract
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -19,7 +20,9 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -29,7 +32,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -74,6 +81,27 @@ private fun askBatteryExemptionOnce(context: Context) {
         e.printStackTrace()
     }
 }
+
+private fun renameCurrentSong(context: Context, song: Song, newTitle: String): Boolean {
+    val clean = newTitle.trim()
+    if (clean.isEmpty()) return false
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            DocumentsContract.renameDocument(context.contentResolver, song.uri, clean) != null
+        } else {
+            false
+        }
+    } catch (e: Exception) {
+        false
+    }
+}
+
+private fun deleteCurrentSong(context: Context, song: Song): Boolean =
+    try {
+        context.contentResolver.delete(song.uri, null, null) > 0
+    } catch (e: Exception) {
+        false
+    }
 
 @Composable
 fun GlassPlayerApp(vm: PlayerViewModel) {
@@ -128,6 +156,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         }
         var detail by remember { mutableStateOf<SongGroup?>(null) }
         var detailIsArtist by remember { mutableStateOf(false) }
+        var showRenameDialog by remember { mutableStateOf(false) }
+        var renameDraft by remember(current) { mutableStateOf(current?.title ?: "") }
 
         val songsList = rememberLazyListState()
         val albumsGrid = rememberLazyGridState()
@@ -174,11 +204,24 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     else -> SettingsScreen(
                         songCount = songs.size,
                         sortMode = sortMode,
+                        currentSong = current,
                         onSortModeChange = {
                             sortMode = it
                             prefs.edit().putInt("sortMode", it).apply()
                         },
                         onRefresh = vm::refresh,
+                        onRenameCurrent = {
+                            if (current != null) {
+                                renameDraft = current.title
+                                showRenameDialog = true
+                            }
+                        },
+                        onDeleteCurrent = {
+                            if (current != null) {
+                                val deleted = deleteCurrentSong(context, current)
+                                if (deleted) vm.refresh()
+                            }
+                        },
                         onReplayWelcome = { showWelcome = true },
                         pad = pad,
                     )
@@ -199,7 +242,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     }
                 }
 
-                // Fades the list out under the dock so the glass stays readable without a live blur.
                 Box(
                     Modifier
                         .align(Alignment.BottomCenter)
@@ -244,6 +286,36 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                         onRepeat = vm::cycleRepeat,
                     )
                 }
+            }
+
+            if (showRenameDialog && current != null) {
+                AlertDialog(
+                    onDismissRequest = { showRenameDialog = false },
+                    title = { GText("Rename track") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GText("Update the current title for \"${current.title}\".", size = 14.sp, color = Glass.TextLo)
+                            TextField(
+                                value = renameDraft,
+                                onValueChange = { renameDraft = it },
+                                singleLine = true,
+                                placeholder = { Text("New title") },
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                val renamed = renameCurrentSong(context, current, renameDraft)
+                                showRenameDialog = false
+                                if (renamed) vm.refresh()
+                            },
+                        ) { Text("Rename") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") }
+                    },
+                )
             }
 
             AnimatedVisibility(
