@@ -3,7 +3,6 @@ package com.glassplayer.app.ui
 import android.app.RecoverableSecurityException
 import android.content.ContentValues
 import android.content.Context
-import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.widget.Toast
@@ -73,7 +72,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     }
 
     val current = songs.firstOrNull { it.id == ui.currentId }
-    // Keep rename available before playback too; default to the first library item.
     val renameTarget = current ?: songs.firstOrNull()
     val albums = remember(songs) { albumsOf(songs) }
     val artists = remember(songs) { artistsOf(songs) }
@@ -255,16 +253,32 @@ private fun renameSong(context: Context, song: Song, requestedName: String): Boo
     )?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
         ?: song.uri.lastPathSegment ?: return false
 
+    val trimmed = requestedName.trim()
     val extension = displayName.substringAfterLast('.', "").takeIf { it.isNotEmpty() }
-    val requestedBase = requestedName.trim().substringBeforeLast('.', requestedName.trim())
+    val requestedBase = trimmed.substringBeforeLast('.', trimmed).ifBlank { trimmed }
     val newDisplayName = if (extension == null) requestedBase else "$requestedBase.$extension"
+
     if (newDisplayName.isBlank() || newDisplayName == displayName) return false
 
     val values = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, newDisplayName)
         put(MediaStore.Audio.AudioColumns.TITLE, requestedBase)
     }
-    return context.contentResolver.update(song.uri, values, null, null) > 0
+
+    val direct = runCatching {
+        context.contentResolver.update(song.uri, values, null, null)
+    }.getOrDefault(0)
+    if (direct > 0) return true
+
+    val fallback = runCatching {
+        context.contentResolver.update(
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+            values,
+            "${MediaStore.Audio.Media._ID}=?",
+            arrayOf(song.id.toString()),
+        )
+    }.getOrDefault(0)
+    return fallback > 0
 }
 
 private fun deleteCurrentSong(context: Context, song: Song): Boolean = try {
