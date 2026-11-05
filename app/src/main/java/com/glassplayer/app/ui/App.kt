@@ -14,13 +14,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -54,6 +55,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val songsList = rememberLazyListState()
     val albumsGrid = rememberLazyGridState()
     val accent = Glass.Aqua
+    val positionState = rememberUpdatedState(position)
 
     val onRenameCurrent: () -> Unit = {
         if (current != null) {
@@ -158,7 +160,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             onTab = { tab = it },
             current = current,
             ui = ui,
-            position = remember { androidx.compose.runtime.State { position } },
+            position = positionState,
             accent = accent,
             onTogglePlay = vm::togglePlay,
             onNext = vm::next,
