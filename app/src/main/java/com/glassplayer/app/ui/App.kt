@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.provider.DocumentsContract
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -104,6 +105,41 @@ private fun deleteCurrentSong(context: Context, song: Song): Boolean =
         false
     }
 
+/** Delegate yt-dlp to the user's Termux installation rather than bundling a downloader in the player. */
+private fun requestAudioExtraction(context: Context, url: String) {
+    val uri = runCatching { Uri.parse(url.trim()) }.getOrNull()
+    if (uri == null || uri.scheme !in setOf("http", "https") || uri.host.isNullOrBlank()) {
+        Toast.makeText(context, "Enter a valid http or https URL", Toast.LENGTH_LONG).show()
+        return
+    }
+
+    try {
+        val command = Intent("com.termux.RUN_COMMAND")
+            .setClassName("com.termux", "com.termux.app.RunCommandService")
+            .putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/yt-dlp")
+            .putExtra(
+                "com.termux.RUN_COMMAND_ARGUMENTS",
+                arrayOf(
+                    "-x",
+                    "--audio-format", "mp3",
+                    "--audio-quality", "0",
+                    "-P", "/data/data/com.termux/files/home/storage/music",
+                    url.trim(),
+                ),
+            )
+            .putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home")
+            .putExtra("com.termux.RUN_COMMAND_BACKGROUND", true)
+        context.startService(command)
+        Toast.makeText(context, "yt-dlp started in Termux", Toast.LENGTH_LONG).show()
+    } catch (e: Exception) {
+        Toast.makeText(
+            context,
+            "Couldn't start Termux. Install/configure Termux and yt-dlp; see Settings for setup.",
+            Toast.LENGTH_LONG,
+        ).show()
+    }
+}
+
 @Composable
 fun GlassPlayerApp(vm: PlayerViewModel) {
     MaterialTheme(
@@ -152,9 +188,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
 
         var tab by rememberSaveable { mutableIntStateOf(0) }
         var playerOpen by rememberSaveable { mutableStateOf(false) }
-        var showWelcome by rememberSaveable {
-            mutableStateOf(!prefs.getBoolean("welcomeSeen", false))
-        }
         var detail by remember { mutableStateOf<SongGroup?>(null) }
         var detailIsArtist by remember { mutableStateOf(false) }
         var showRenameDialog by remember { mutableStateOf(false) }
@@ -164,9 +197,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         val albumsGrid = rememberLazyGridState()
         val artistsList = rememberLazyListState()
 
-        BackHandler(enabled = showWelcome) { }
-        BackHandler(enabled = !showWelcome && playerOpen) { playerOpen = false }
-        BackHandler(enabled = !showWelcome && !playerOpen && detail != null) { detail = null }
+        BackHandler(enabled = playerOpen) { playerOpen = false }
+        BackHandler(enabled = !playerOpen && detail != null) { detail = null }
         LaunchedEffect(current == null) { if (current == null) playerOpen = false }
         LaunchedEffect(current != null) { if (current != null) askBatteryExemptionOnce(context) }
 
@@ -223,7 +255,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                                 if (deleted) vm.refresh()
                             }
                         },
-                        onReplayWelcome = { showWelcome = true },
+                        onExtractAudio = { url -> requestAudioExtraction(context, url) },
                         pad = pad,
                     )
                 }
@@ -292,15 +324,15 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             if (showRenameDialog && current != null) {
                 AlertDialog(
                     onDismissRequest = { showRenameDialog = false },
-                    title = { GText("Rename track") },
+                    title = { GText("Rename audio file") },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            GText("Update the current title for \"${current.title}\".", size = 14.sp, color = Glass.TextLo)
+                            GText("Enter the new filename, including its extension.", size = 14.sp, color = Glass.TextLo)
                             TextField(
                                 value = renameDraft,
                                 onValueChange = { renameDraft = it },
                                 singleLine = true,
-                                placeholder = { Text("New title") },
+                                placeholder = { Text("New filename, e.g. track.mp3") },
                             )
                         }
                     },
@@ -317,17 +349,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                         TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") }
                     },
                 )
-            }
-
-            AnimatedVisibility(
-                visible = showWelcome,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                WelcomeScreen {
-                    prefs.edit().putBoolean("welcomeSeen", true).apply()
-                    showWelcome = false
-                }
             }
         }
     }
