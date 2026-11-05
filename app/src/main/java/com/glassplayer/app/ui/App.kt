@@ -1,12 +1,21 @@
 package com.glassplayer.app.ui
 
+import android.app.RecoverableSecurityException
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
@@ -19,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -39,7 +47,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val songs by vm.songs.collectAsState()
     val loaded by vm.loaded.collectAsState()
     val ui by vm.ui.collectAsState()
-    val position by vm.position.collectAsState()
+    val positionState = vm.position.collectAsState()
     val prefs = remember(context) { context.getSharedPreferences("zmusic_prefs", Context.MODE_PRIVATE) }
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -48,6 +56,22 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0)) }
     var renameDraft by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
+    var pendingRename by remember { mutableStateOf<Pair<Song, String>?>(null) }
+
+    val renamePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult(),
+    ) { result ->
+        val request = pendingRename
+        pendingRename = null
+        if (result.resultCode == android.app.Activity.RESULT_OK && request != null) {
+            if (renameSong(context, request.first, request.second)) {
+                vm.refresh()
+                Toast.makeText(context, "File renamed", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Could not rename this file", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     val current = songs.firstOrNull { it.id == ui.currentId }
     val albums = remember(songs) { albumsOf(songs) }
@@ -55,7 +79,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val songsList = rememberLazyListState()
     val albumsGrid = rememberLazyGridState()
     val accent = Glass.Aqua
-    val positionState = rememberUpdatedState(position)
 
     val onRenameCurrent: () -> Unit = {
         if (current != null) {
@@ -81,8 +104,9 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Glass.Ink.copy(alpha = 0.96f),
-                        Color(0xFF0c1322),
+                        Color(0xFF080808),
+                        Color(0xFF1C1C1C),
+                        Color(0xFF303030),
                     )
                 )
             )
@@ -139,7 +163,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     songCount = songs.size,
                     sortMode = sortMode,
                     currentSong = current,
-                    wallpaperUri = null,
                     onSortModeChange = {
                         sortMode = it
                         prefs.edit().putInt("sortMode", it).apply()
@@ -148,8 +171,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     onRenameCurrent = onRenameCurrent,
                     onDeleteCurrent = onDeleteCurrent,
                     onExtractAudio = onExtractAudio,
-                    onPickWallpaper = {},
-                    onClearWallpaper = {},
                     pad = PaddingValues(bottom = 120.dp),
                 )
             }
@@ -182,14 +203,45 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     value = renameDraft,
                     onValueChange = { renameDraft = it },
                     singleLine = true,
+                    label = { Text("New file name") },
                 )
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showRenameDialog = false
-                        if (renameDraft.isNotBlank()) {
-                            // No-op placeholder to keep the project compiling.
+                        val newName = renameDraft.trim()
+                        if (newName.isNotEmpty()) {
+                            showRenameDialog = false
+                            pendingRename = current to newName
+                            try {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    val request = MediaStore.createWriteRequest(
+                                        context.contentResolver,
+                                        listOf(current.uri),
+                                    )
+                                    renamePermissionLauncher.launch(
+                                        IntentSenderRequest.Builder(request.intentSender).build()
+                                    )
+                                } else {
+                                    try {
+                                        if (renameSong(context, current, newName)) {
+                                            vm.refresh()
+                                            Toast.makeText(context, "File renamed", Toast.LENGTH_SHORT).show()
+                                            pendingRename = null
+                                        } else {
+                                            pendingRename = null
+                                            Toast.makeText(context, "Could not rename this file", Toast.LENGTH_LONG).show()
+                                        }
+                                    } catch (e: RecoverableSecurityException) {
+                                        renamePermissionLauncher.launch(
+                                            IntentSenderRequest.Builder(e.userAction.actionIntent.intentSender).build()
+                                        )
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                pendingRename = null
+                                Toast.makeText(context, "Could not rename this file: ${e.localizedMessage ?: "permission denied"}", Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 ) {
@@ -205,10 +257,34 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     }
 }
 
-private fun deleteCurrentSong(context: Context, song: Song): Boolean {
-    val uri = song.uri
-    val path = uri.path ?: return false
-    return try {
+private fun renameSong(context: Context, song: Song, requestedName: String): Boolean {
+    val displayName = context.contentResolver.query(
+        song.uri,
+        arrayOf(MediaStore.MediaColumns.DISPLAY_NAME),
+        null,
+        null,
+        null,
+    )?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    } ?: song.uri.lastPathSegment ?: return false
+
+    val extension = displayName.substringAfterLast('.', "").takeIf { it.isNotEmpty() }
+    val requestedBase = requestedName.trim().substringBeforeLast('.', requestedName.trim())
+    val newDisplayName = if (extension == null) requestedBase else "$requestedBase.$extension"
+    if (newDisplayName.isBlank() || newDisplayName == displayName) return false
+
+    val values = ContentValues().apply {
+        put(MediaStore.MediaColumns.DISPLAY_NAME, newDisplayName)
+        put(MediaStore.Audio.AudioColumns.TITLE, requestedBase)
+    }
+    return context.contentResolver.update(song.uri, values, null, null) > 0
+}
+
+private fun deleteCurrentSong(context: Context, song: Song): Boolean = try {
+    context.contentResolver.delete(song.uri, null, null) > 0
+} catch (_: Exception) {
+    val path = song.uri.path ?: return false
+    try {
         File(path).delete()
     } catch (_: Exception) {
         false
@@ -218,7 +294,3 @@ private fun deleteCurrentSong(context: Context, song: Song): Boolean {
 private fun requestAudioExtraction(context: Context, url: String) {
     // No-op placeholder. The app can later wire this to Termux/ytdlp.
 }
-
-private val tint = Color(0xFF7B6CFF)
-
-private fun createWallpaperUri(): Uri? = null
