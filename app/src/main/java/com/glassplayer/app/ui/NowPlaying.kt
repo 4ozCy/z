@@ -59,6 +59,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
+import android.net.Uri
 import com.glassplayer.app.PlaybackUi
 import com.glassplayer.app.data.Song
 
@@ -75,11 +76,12 @@ fun NowPlaying(
     onSeek: (Long) -> Unit,
     onShuffle: () -> Unit,
     onRepeat: () -> Unit,
+    wallpaperUri: Uri? = null,
 ) {
     val glow by animateColorAsState(accent, tween(700), label = "nowPlayingAccent")
 
     Box(Modifier.fillMaxSize()) {
-        GlassBackdrop(accent)
+        GlassBackdrop(accent, wallpaperUri = wallpaperUri)
 
         Column(
             Modifier
@@ -96,7 +98,6 @@ fun NowPlaying(
                 GText("Now playing", size = 15.sp, weight = FontWeight.Medium, color = Glass.TextLo)
             }
 
-            // The one big moment: the tile breathes between paused and playing.
             BoxWithConstraints(
                 Modifier.weight(1f).fillMaxWidth().padding(vertical = 18.dp),
                 contentAlignment = Alignment.Center,

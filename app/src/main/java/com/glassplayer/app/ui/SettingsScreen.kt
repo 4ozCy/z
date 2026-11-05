@@ -1,5 +1,6 @@
 package com.glassplayer.app.ui
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.SortByAlpha
 import androidx.compose.runtime.Composable
@@ -35,11 +37,14 @@ fun SettingsScreen(
     songCount: Int,
     sortMode: Int,
     currentSong: Song?,
+    wallpaperUri: Uri?,
     onSortModeChange: (Int) -> Unit,
     onRefresh: () -> Unit,
     onRenameCurrent: () -> Unit,
     onDeleteCurrent: () -> Unit,
     onExtractAudio: (String) -> Unit,
+    onPickWallpaper: () -> Unit,
+    onClearWallpaper: () -> Unit,
     pad: androidx.compose.foundation.layout.PaddingValues,
 ) {
     var audioUrl by rememberSaveable { mutableStateOf("") }
@@ -72,6 +77,24 @@ fun SettingsScreen(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     GlassPillButton("Rename file", Icons.Rounded.Edit, onRenameCurrent, tint = Glass.Coral)
                     GlassPillButton("Delete current", Icons.Rounded.Delete, onDeleteCurrent, tint = Glass.Coral)
+                }
+            }
+        }
+
+        Column(
+            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(26.dp), strength = 1.1f).padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            GText("Background", size = 19.sp, weight = FontWeight.Bold)
+            GText(
+                if (wallpaperUri == null) "Use a photo from your device as the app wallpaper."
+                else "A custom wallpaper is active.",
+                size = 14.sp, color = Glass.TextLo,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                GlassPillButton("Choose wallpaper", Icons.Rounded.Image, onPickWallpaper, tint = Glass.Aqua)
+                if (wallpaperUri != null) {
+                    GlassPillButton("Remove", Icons.Rounded.Delete, onClearWallpaper, tint = Glass.Coral)
                 }
             }
         }
