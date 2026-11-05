@@ -122,6 +122,20 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             granted = hasAudioPermission(context)
             if (granted) vm.refresh()
         }
+        var wallpaperUri by remember {
+            mutableStateOf(prefs.getString("wallpaperUri", null)?.let(Uri::parse))
+        }
+        val wallpaperPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                try {
+                    context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: SecurityException) {
+                    // Some document providers do not offer persistable grants; keep the current session usable.
+                }
+                wallpaperUri = uri
+                prefs.edit().putString("wallpaperUri", uri.toString()).apply()
+            }
+        }
 
         val songs by vm.songs.collectAsState()
         val loaded by vm.loaded.collectAsState()
@@ -152,9 +166,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
 
         var tab by rememberSaveable { mutableIntStateOf(0) }
         var playerOpen by rememberSaveable { mutableStateOf(false) }
-        var showWelcome by rememberSaveable {
-            mutableStateOf(!prefs.getBoolean("welcomeSeen", false))
-        }
         var detail by remember { mutableStateOf<SongGroup?>(null) }
         var detailIsArtist by remember { mutableStateOf(false) }
         var showRenameDialog by remember { mutableStateOf(false) }
@@ -164,9 +175,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         val albumsGrid = rememberLazyGridState()
         val artistsList = rememberLazyListState()
 
-        BackHandler(enabled = showWelcome) { }
-        BackHandler(enabled = !showWelcome && playerOpen) { playerOpen = false }
-        BackHandler(enabled = !showWelcome && !playerOpen && detail != null) { detail = null }
+        BackHandler(enabled = playerOpen) { playerOpen = false }
+        BackHandler(enabled = !playerOpen && detail != null) { detail = null }
         LaunchedEffect(current == null) { if (current == null) playerOpen = false }
         LaunchedEffect(current != null) { if (current != null) askBatteryExemptionOnce(context) }
 
@@ -183,7 +193,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         }
 
         Box(Modifier.fillMaxSize().background(Glass.Ink)) {
-            GlassBackdrop(accent)
+            GlassBackdrop(accent, wallpaperUri)
 
             if (!granted) {
                 PermissionScreen { launcher.launch(permissionsToAsk()) }
@@ -223,7 +233,11 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                                 if (deleted) vm.refresh()
                             }
                         },
-                        onReplayWelcome = { showWelcome = true },
+                        onChooseWallpaper = { wallpaperPicker.launch(arrayOf("image/*")) },
+                        onResetWallpaper = {
+                            wallpaperUri = null
+                            prefs.edit().remove("wallpaperUri").apply()
+                        },
                         pad = pad,
                     )
                 }
@@ -318,18 +332,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     },
                 )
             }
-
-            AnimatedVisibility(
-                visible = showWelcome,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                WelcomeScreen {
-                    prefs.edit().putBoolean("welcomeSeen", true).apply()
-                    showWelcome = false
-                }
-            }
         }
     }
 }
-
