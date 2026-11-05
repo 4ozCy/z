@@ -107,34 +107,42 @@ private fun deleteCurrentSong(context: Context, song: Song): Boolean =
 
 /** Delegate yt-dlp to the user's Termux installation rather than bundling a downloader in the player. */
 private fun requestAudioExtraction(context: Context, url: String) {
-    val uri = runCatching { Uri.parse(url.trim()) }.getOrNull()
+    val cleanUrl = url.trim()
+    val uri = runCatching { Uri.parse(cleanUrl) }.getOrNull()
     if (uri == null || uri.scheme !in setOf("http", "https") || uri.host.isNullOrBlank()) {
         Toast.makeText(context, "Enter a valid http or https URL", Toast.LENGTH_LONG).show()
         return
     }
 
+    val command = Intent("com.termux.RUN_COMMAND")
+        .setClassName("com.termux", "com.termux.app.RunCommandService")
+        .putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/yt-dlp")
+        .putExtra(
+            "com.termux.RUN_COMMAND_ARGUMENTS",
+            arrayOf(
+                "-x",
+                "--audio-format", "mp3",
+                "--audio-quality", "0",
+                "-P", "/data/data/com.termux/files/home/storage/music",
+                cleanUrl,
+            ),
+        )
+        .putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home")
+        .putExtra("com.termux.RUN_COMMAND_BACKGROUND", true)
+
     try {
-        val command = Intent("com.termux.RUN_COMMAND")
-            .setClassName("com.termux", "com.termux.app.RunCommandService")
-            .putExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/yt-dlp")
-            .putExtra(
-                "com.termux.RUN_COMMAND_ARGUMENTS",
-                arrayOf(
-                    "-x",
-                    "--audio-format", "mp3",
-                    "--audio-quality", "0",
-                    "-P", "/data/data/com.termux/files/home/storage/music",
-                    url.trim(),
-                ),
-            )
-            .putExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home")
-            .putExtra("com.termux.RUN_COMMAND_BACKGROUND", true)
         context.startService(command)
-        Toast.makeText(context, "yt-dlp started in Termux", Toast.LENGTH_LONG).show()
+        Toast.makeText(context, "yt-dlp command sent to Termux. Check Termux notifications for progress.", Toast.LENGTH_LONG).show()
+    } catch (e: SecurityException) {
+        Toast.makeText(
+            context,
+            "Termux denied the request. In Termux, enable Allow external apps in Settings, then retry. Details: ${e.message ?: "permission denied"}",
+            Toast.LENGTH_LONG,
+        ).show()
     } catch (e: Exception) {
         Toast.makeText(
             context,
-            "Couldn't start Termux. Install/configure Termux and yt-dlp; see Settings for setup.",
+            "Couldn't start Termux (${e.javaClass.simpleName}: ${e.message ?: "no details"}). Check Termux is installed and Allow external apps is enabled.",
             Toast.LENGTH_LONG,
         ).show()
     }
