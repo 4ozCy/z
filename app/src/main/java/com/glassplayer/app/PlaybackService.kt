@@ -1,8 +1,12 @@
 package com.glassplayer.app
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import androidx.media3.common.AudioAttributes
+import androidx.media3.common.util.UnstableApi
+import com.glassplayer.app.audio.AudioEffectsController
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -15,8 +19,15 @@ import androidx.media3.session.MediaSessionService
  */
 class PlaybackService : MediaSessionService() {
 
+    companion object {
+        @Volatile
+        var audioSessionId: Int = AudioManager.ERROR
+            private set
+    }
+
     private var session: MediaSession? = null
 
+    @OptIn(UnstableApi::class)
     override fun onCreate() {
         super.onCreate()
         val player = ExoPlayer.Builder(this)
@@ -31,6 +42,15 @@ class PlaybackService : MediaSessionService() {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
             .apply { repeatMode = Player.REPEAT_MODE_ALL } // never falls silent at the end of the queue
+
+        val generatedSession = runCatching {
+            (getSystemService(Context.AUDIO_SERVICE) as AudioManager).generateAudioSessionId()
+        }.getOrDefault(AudioManager.ERROR)
+        audioSessionId = generatedSession
+        if (generatedSession > 0) {
+            runCatching { player.setAudioSessionId(generatedSession) }
+                .onFailure { audioSessionId = AudioManager.ERROR }
+        }
 
         val openApp = PendingIntent.getActivity(
             this,
@@ -50,6 +70,8 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        AudioEffectsController.release()
+        audioSessionId = AudioManager.ERROR
         session?.run {
             player.release()
             release()

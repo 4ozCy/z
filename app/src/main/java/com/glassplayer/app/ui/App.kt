@@ -60,6 +60,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val loaded by vm.loaded.collectAsState()
     val ui by vm.ui.collectAsState()
     val positionState = vm.position.collectAsState()
+    val queueState by vm.queue.collectAsState()
+    val sleepTimerRemainingMs by vm.sleepTimerRemainingMs.collectAsState()
     val prefs = remember(context) { context.getSharedPreferences("zmusic_prefs", Context.MODE_PRIVATE) }
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -201,6 +203,13 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                             onRepeat = vm::cycleRepeat,
                             isFavorite = current.id in favoriteIds,
                             onToggleFavorite = { onToggleFavorite(current) },
+                            playbackSpeed = ui.playbackSpeed,
+                            onSetPlaybackSpeed = vm::setPlaybackSpeed,
+                            sleepTimerRemainingMs = sleepTimerRemainingMs,
+                            onStartSleepTimer = vm::startSleepTimer,
+                            onCancelSleepTimer = vm::cancelSleepTimer,
+                            onOpenEqualizer = { tab = 5 },
+                            onOpenQueue = { tab = 6 },
                         )
                     } else {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -208,6 +217,15 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                         }
                     }
                 }
+                5 -> EqualizerScreen(onBack = { tab = 4 })
+                6 -> QueueScreen(
+                    queue = queueState.songs,
+                    currentIndex = queueState.currentIndex,
+                    onBack = { tab = 4 },
+                    onPlay = vm::playQueueItem,
+                    onMove = vm::moveQueueItem,
+                    onRemove = vm::removeQueueItem,
+                )
                 else -> SongsScreen(
                     songs = songs,
                     loaded = loaded,
@@ -224,7 +242,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 )
         }
 
-        if (tab != 4 || current == null) Dock(
+        if (tab !in 4..6 || current == null) Dock(
             tab = tab,
             onTab = { tab = it },
             current = current,

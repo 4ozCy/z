@@ -41,6 +41,12 @@ data class PlaybackUi(
     val durationMs: Long = 0L,
     val shuffle: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val playbackSpeed: Float = 1f,
+)
+
+data class QueueState(
+    val songs: List<Song> = emptyList(),
+    val currentIndex: Int = -1,
 )
 
 class PlayerViewModel(app: Application) : AndroidViewModel(app) {
@@ -58,6 +64,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private val _position = MutableStateFlow(0L)
     val position: StateFlow<Long> = _position.asStateFlow()
 
+    private val _queue = MutableStateFlow(QueueState())
+    val queue: StateFlow<QueueState> = _queue.asStateFlow()
+
+    private val _sleepTimerRemainingMs = MutableStateFlow(0L)
+    val sleepTimerRemainingMs: StateFlow<Long> = _sleepTimerRemainingMs.asStateFlow()
+
+    private var sleepTimerJob: Job? = null
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
     private var ticker: Job? = null
@@ -77,6 +90,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 val c = future.get()
                 controller = c
                 c.addListener(listener)
+                val savedSpeed = ctx.getSharedPreferences("zmusic_prefs", Context.MODE_PRIVATE)
+                    .getFloat("playbackSpeed", 1f)
+                if (c.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH)) {
+                    runCatching { c.setPlaybackSpeed(savedSpeed.coerceIn(0.5f, 2.0f)) }
+                }
                 sync()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -105,8 +123,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val wantsToPlay = c.playWhenReady &&
             c.playbackState != Player.STATE_IDLE &&
             c.playbackState != Player.STATE_ENDED
-        _ui.value = PlaybackUi(id, wantsToPlay, duration, c.shuffleModeEnabled, c.repeatMode)
+        _ui.value = PlaybackUi(
+            currentId = id,
+            isPlaying = wantsToPlay,
+            durationMs = duration,
+            shuffle = c.shuffleModeEnabled,
+            repeatMode = c.repeatMode,
+            playbackSpeed = c.playbackParameters.speed,
+        )
         _position.value = c.currentPosition.coerceAtLeast(0L)
+        val songsById = _songs.value.associateBy { it.id }
+        val queueSongs = (0 until c.mediaItemCount).mapNotNull { index ->
+            c.getMediaItemAt(index).mediaId.toLongOrNull()?.let(songsById::get)
+        }
+        _queue.value = QueueState(
+            songs = queueSongs,
+            currentIndex = if (c.mediaItemCount > 0) c.currentMediaItemIndex else -1,
+        )
         if (c.isPlaying) startTicker() else ticker?.cancel()
     }
 
@@ -172,8 +205,75 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun setPlaybackSpeed(speed: Float) {
+        val c = controller ?: return
+        val safeSpeed = speed.coerceIn(0.5f, 2.0f)
+        if (c.isCommandAvailable(Player.COMMAND_SET_SPEED_AND_PITCH)) {
+            runCatching { c.setPlaybackSpeed(safeSpeed) }
+                .onSuccess {
+                    getApplication<Application>()
+                        .getSharedPreferences("zmusic_prefs", Context.MODE_PRIVATE)
+                        .edit()
+                        .putFloat("playbackSpeed", safeSpeed)
+                        .apply()
+                    sync()
+                }
+        }
+    }
+
+    fun startSleepTimer(minutes: Int) {
+        if (minutes <= 0) return
+        sleepTimerJob?.cancel()
+        val endAt = System.currentTimeMillis() + minutes * 60_000L
+        sleepTimerJob = viewModelScope.launch {
+            while (isActive) {
+                val remaining = (endAt - System.currentTimeMillis()).coerceAtLeast(0L)
+                _sleepTimerRemainingMs.value = remaining
+                if (remaining <= 0L) {
+                    controller?.pause()
+                    _sleepTimerRemainingMs.value = 0L
+                    break
+                }
+                delay(minOf(1_000L, remaining))
+            }
+        }
+    }
+
+    fun cancelSleepTimer() {
+        sleepTimerJob?.cancel()
+        sleepTimerJob = null
+        _sleepTimerRemainingMs.value = 0L
+    }
+
+    fun playQueueItem(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        runCatching {
+            c.seekToDefaultPosition(index)
+            c.play()
+        }
+        sync()
+    }
+
+    fun moveQueueItem(from: Int, to: Int) {
+        val c = controller ?: return
+        if (from !in 0 until c.mediaItemCount || to !in 0 until c.mediaItemCount || from == to) return
+        if (!c.isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) return
+        runCatching { c.moveMediaItem(from, to) }
+        sync()
+    }
+
+    fun removeQueueItem(index: Int) {
+        val c = controller ?: return
+        if (index !in 0 until c.mediaItemCount) return
+        if (!c.isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) return
+        runCatching { c.removeMediaItem(index) }
+        sync()
+    }
+
     override fun onCleared() {
         ticker?.cancel()
+        sleepTimerJob?.cancel()
         controller?.removeListener(listener)
         controllerFuture?.let { MediaController.releaseFuture(it) }
         super.onCleared()

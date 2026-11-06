@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
@@ -29,6 +30,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
+import androidx.compose.material.icons.rounded.Equalizer
+import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -80,8 +84,16 @@ fun NowPlaying(
     onRepeat: () -> Unit,
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
+    playbackSpeed: Float,
+    onSetPlaybackSpeed: (Float) -> Unit,
+    sleepTimerRemainingMs: Long,
+    onStartSleepTimer: (Int) -> Unit,
+    onCancelSleepTimer: () -> Unit,
+    onOpenEqualizer: () -> Unit,
+    onOpenQueue: () -> Unit,
     wallpaperUri: Uri? = null,
 ) {
+    var showSleepTimer by remember { mutableStateOf(false) }
     val glow by animateColorAsState(accent, tween(700), label = "nowPlayingAccent")
 
     Box(Modifier.fillMaxSize()) {
@@ -100,15 +112,28 @@ fun NowPlaying(
                     modifier = Modifier.align(Alignment.CenterStart), size = 44.dp,
                 )
                 GText("Now playing", size = 15.sp, weight = FontWeight.Medium, color = Glass.TextLo)
-                GlassIconButton(
-                    if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                    if (isFavorite) "Remove from liked songs" else "Add to liked songs",
-                    onToggleFavorite,
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                    size = 44.dp,
-                    iconSize = 22.dp,
-                    tint = if (isFavorite) Glass.Coral else Glass.TextLo,
-                )
+                Row(
+                    Modifier.align(Alignment.CenterEnd),
+                    horizontalArrangement = Arrangement.spacedBy(1.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    GlassIconButton(
+                        Icons.Rounded.QueueMusic, "Up next queue", onOpenQueue,
+                        size = 36.dp, iconSize = 19.dp, filled = false,
+                    )
+                    GlassIconButton(
+                        Icons.Rounded.Equalizer, "Sound Studio", onOpenEqualizer,
+                        size = 36.dp, iconSize = 19.dp, filled = false,
+                    )
+                    GlassIconButton(
+                        if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                        if (isFavorite) "Remove from liked songs" else "Add to liked songs",
+                        onToggleFavorite,
+                        size = 36.dp,
+                        iconSize = 19.dp,
+                        tint = if (isFavorite) Glass.Coral else Glass.TextLo,
+                    )
+                }
             }
 
             BoxWithConstraints(
@@ -134,6 +159,40 @@ fun NowPlaying(
 
             GText(song.title, size = 28.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.6).sp)
             GText(song.artist, size = 17.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 4.dp))
+
+            Row(
+                Modifier.fillMaxWidth().padding(top = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                listOf(0.75f, 1f, 1.25f, 1.5f, 2f).forEach { speed ->
+                    val selectedSpeed = kotlin.math.abs(playbackSpeed - speed) < 0.03f
+                    Box(
+                        Modifier.weight(1f).height(34.dp)
+                            .glassCard(RoundedCornerShape(13.dp), if (selectedSpeed) glow else Color.White, if (selectedSpeed) 1.25f else 0.8f)
+                            .clickable { onSetPlaybackSpeed(speed) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        GText(
+                            if (speed == 1f) "1×" else speed.toString().removeSuffix(".0") + "×",
+                            size = 12.sp,
+                            weight = if (selectedSpeed) FontWeight.Bold else FontWeight.Medium,
+                            color = if (selectedSpeed) Glass.TextHi else Glass.TextLo,
+                        )
+                    }
+                }
+            }
+
+            Row(
+                Modifier.fillMaxWidth().padding(top = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                GlassPillButton(
+                    if (sleepTimerRemainingMs > 0L) "Sleep · " + formatSleepCountdown(sleepTimerRemainingMs) else "Sleep timer",
+                    Icons.Rounded.Timer,
+                    { showSleepTimer = true },
+                    tint = if (sleepTimerRemainingMs > 0L) glow else Color.White,
+                )
+            }
 
             SeekSection(position, ui.durationMs, glow, onSeek)
 
@@ -165,7 +224,68 @@ fun NowPlaying(
                 )
             }
         }
+
+        if (showSleepTimer) {
+            Box(
+                Modifier.fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.62f))
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 22.dp)
+                        .glassCard(RoundedCornerShape(28.dp), glow, 1.5f)
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            GText("Sleep timer", size = 22.sp, weight = FontWeight.Bold)
+                            GText("Pause playback automatically", size = 13.sp, color = Glass.TextLo)
+                        }
+                        GlassIconButton(Icons.Rounded.KeyboardArrowDown, "Close timer", { showSleepTimer = false }, size = 38.dp)
+                    }
+                    if (sleepTimerRemainingMs > 0L) {
+                        GText("Active · " + formatSleepCountdown(sleepTimerRemainingMs) + " remaining", size = 13.sp, color = glow)
+                    }
+                    listOf(5, 10, 15, 30, 45, 60).chunked(3).forEach { minuteRow ->
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                            minuteRow.forEach { minutes ->
+                                GlassPillButton(
+                                    minutes.toString() + " min",
+                                    Icons.Rounded.Timer,
+                                    {
+                                        onStartSleepTimer(minutes)
+                                        showSleepTimer = false
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    tint = glow,
+                                )
+                            }
+                        }
+                    }
+                    if (sleepTimerRemainingMs > 0L) {
+                        GlassPillButton(
+                            "Cancel timer",
+                            Icons.Rounded.Close,
+                            {
+                                onCancelSleepTimer()
+                                showSleepTimer = false
+                            },
+                            tint = Glass.Coral,
+                        )
+                    }
+                }
+            }
+        }
     }
+}
+
+private fun formatSleepCountdown(milliseconds: Long): String {
+    val totalSeconds = (milliseconds / 1000L).coerceAtLeast(0L)
+    val minutes = totalSeconds / 60L
+    val seconds = totalSeconds % 60L
+    return String.format(java.util.Locale.US, "%d:%02d", minutes, seconds)
 }
 
 @Composable
