@@ -301,6 +301,7 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
 
     Thread {
         var savedUri: android.net.Uri? = null
+        var tempFile: File? = null
         try {
             val form = "youtube_url=${URLEncoder.encode(url.trim(), "UTF-8")}&quality=192"
             val apiConnection = (URL("https://ytmp3.ge/api/convert").openConnection() as HttpURLConnection).apply {
@@ -310,6 +311,7 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
                 doOutput = true
                 setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
                 setRequestProperty("Accept", "application/json")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
             }
 
             val responseText: String
@@ -333,6 +335,49 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
             val rawTitle = json.optString("title", "Zmusic download")
             val safeTitle = rawTitle.replace("\\", "_").replace(Regex("[/:*?\"<>|]"), "_")
                 .trim().trim('.').take(100).ifBlank { "Zmusic download" }
+
+            // Download and validate the response before creating a visible Music file.
+            // Some download hosts return an empty response or an HTML error page with HTTP 200.
+            tempFile = File.createTempFile("zmusic-audio-", ".mp3", context.cacheDir)
+            val downloadConnection = (URL(downloadUrl).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 20_000
+                readTimeout = 300_000
+                instanceFollowRedirects = true
+                setRequestProperty("Accept", "audio/mpeg, application/octet-stream, */*")
+                setRequestProperty("Accept-Encoding", "identity")
+                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
+                setRequestProperty("Referer", "https://ytmp3.ge/")
+            }
+
+            var downloadedBytes = 0L
+            try {
+                val status = downloadConnection.responseCode
+                if (status !in 200..299) throw IllegalStateException("MP3 download returned HTTP $status")
+                val contentType = downloadConnection.contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
+                if (contentType == "text/html" || contentType == "application/json" || contentType.startsWith("text/")) {
+                    throw IllegalStateException("The download server returned an error page instead of an MP3")
+                }
+                downloadConnection.inputStream.use { input ->
+                    tempFile!!.outputStream().buffered().use { output ->
+                        val buffer = ByteArray(16 * 1024)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            if (count > 0) {
+                                output.write(buffer, 0, count)
+                                downloadedBytes += count
+                            }
+                        }
+                    }
+                }
+            } finally {
+                downloadConnection.disconnect()
+            }
+            if (downloadedBytes <= 0L || tempFile!!.length() <= 0L) {
+                throw IllegalStateException("The conversion service returned an empty MP3. Please try again.")
+            }
+
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, "$safeTitle.mp3")
                 put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
@@ -342,21 +387,23 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
             savedUri = context.contentResolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
                 ?: throw IllegalStateException("Could not create the MP3 file in Music/Zmusic")
 
-            val downloadConnection = (URL(downloadUrl).openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 20_000
-                readTimeout = 300_000
-                instanceFollowRedirects = true
-                setRequestProperty("Accept", "audio/mpeg, application/octet-stream, */*")
-            }
-            try {
-                val status = downloadConnection.responseCode
-                if (status !in 200..299) throw IllegalStateException("MP3 download returned HTTP $status")
-                context.contentResolver.openOutputStream(savedUri!!, "w")?.use { output ->
-                    downloadConnection.inputStream.use { input -> input.copyTo(output) }
-                } ?: throw IllegalStateException("Could not write the MP3 file")
-            } finally {
-                downloadConnection.disconnect()
+            var savedBytes = 0L
+            context.contentResolver.openOutputStream(savedUri!!, "w")?.use { output ->
+                tempFile!!.inputStream().buffered().use { input ->
+                    val buffer = ByteArray(16 * 1024)
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        if (count > 0) {
+                            output.write(buffer, 0, count)
+                            savedBytes += count
+                        }
+                    }
+                }
+            } ?: throw IllegalStateException("Could not write the MP3 file")
+
+            if (savedBytes <= 0L || savedBytes != downloadedBytes) {
+                throw IllegalStateException("The MP3 was not saved completely. Please try again.")
             }
 
             val completed = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
@@ -371,6 +418,8 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
             mainHandler.post {
                 Toast.makeText(context, "Audio extraction failed: $message", Toast.LENGTH_LONG).show()
             }
+        } finally {
+            tempFile?.let { runCatching { it.delete() } }
         }
     }.start()
 }
