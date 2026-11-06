@@ -79,9 +79,9 @@ fun Dock(
         modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, bottom = 12.dp)
+            .padding(start = 10.dp, end = 10.dp, bottom = 8.dp)
             .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         if (current != null) {
             MiniPlayer(current, ui, position, accent, onTogglePlay, onNext, onOpenPlayer)
@@ -104,7 +104,7 @@ private fun MiniPlayer(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(66.dp)
+            .height(54.dp)
             .dockGlass(shape, accent)
             .clickable(onClick = onOpen)
             .drawBehind {
@@ -123,15 +123,15 @@ private fun MiniPlayer(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Artwork(song, Modifier.size(46.dp), RoundedCornerShape(15.dp))
+        Artwork(song, Modifier.size(38.dp), RoundedCornerShape(15.dp))
         Column(Modifier.weight(1f)) {
-            GText(song.title, size = 15.sp, weight = FontWeight.SemiBold)
-            GText(song.artist, size = 13.sp, color = Glass.TextLo)
+            GText(song.title, size = 13.sp, weight = FontWeight.SemiBold)
+            GText(song.artist, size = 10.sp, color = Glass.TextLo)
         }
-        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(44.dp))
+        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(38.dp))
         GlassIconButton(
             Icons.Rounded.SkipNext, "Next song", onNext,
-            size = 42.dp, iconSize = 26.dp, filled = false,
+            size = 36.dp, iconSize = 22.dp, filled = false,
         )
     }
 }
@@ -172,7 +172,7 @@ private fun NavPill(
     Row(
         Modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .height(58.dp)
             .dockGlass(shape)
             .drawBehind {
                 val itemW = size.width / NavTabs.size
@@ -225,7 +225,7 @@ private fun NavPill(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(24.dp))
+                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(20.dp))
                 GText(
                     t.label,
                     size = 11.sp,
