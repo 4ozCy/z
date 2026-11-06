@@ -46,16 +46,16 @@ fun SettingsScreen(
 
     Column(
         Modifier.fillMaxSize().padding(pad),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         ScreenHeader("Options", "Make Zmusic feel like yours")
 
         Column(
-            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(26.dp), strength = 1.1f).padding(18.dp),
+            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(20.dp), strength = 1.1f).padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            GText("Library", size = 19.sp, weight = FontWeight.Bold)
-            GText("$songCount songs on this device", size = 14.sp, color = Glass.TextLo)
+            GText("Library", size = 17.sp, weight = FontWeight.Bold)
+            GText("$songCount songs on this device", size = 12.sp, color = Glass.TextLo)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("Title", "Artist", "Album").forEachIndexed { index, label ->
                     GlassPillButton(
@@ -66,7 +66,7 @@ fun SettingsScreen(
                     )
                 }
             }
-            GText("Sort songs by", size = 13.sp, color = Glass.TextLo)
+            GText("Sort songs by", size = 12.sp, color = Glass.TextLo)
             GlassPillButton("Rescan music", Icons.Rounded.Refresh, onRefresh, tint = Glass.Violet)
             if (currentSong != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -80,15 +80,16 @@ fun SettingsScreen(
             Modifier.fillMaxWidth().glassCard(RoundedCornerShape(26.dp), strength = 1.1f).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            GText("Audio extraction", size = 19.sp, weight = FontWeight.Bold)
-            GText("Extract audio as MP3 with yt-dlp. Requires Termux with yt-dlp and FFmpeg installed.", size = 14.sp, color = Glass.TextLo)
+            GText("Audio extraction", size = 17.sp, weight = FontWeight.Bold)
+            GText("Extract audio as MP3 with yt-dlp. Requires Termux with yt-dlp and FFmpeg installed.", size = 12.sp, color = Glass.TextLo)
             OutlinedTextField(
                 value = audioUrl,
                 onValueChange = { audioUrl = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
-                label = { Text("Video or media URL") },
-                placeholder = { Text("https://...") },
+                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
+                label = { Text("Video or media URL", fontSize = 12.sp) },
+                placeholder = { Text("https://...", fontSize = 13.sp) },
             )
             GlassPillButton(
                 "Extract MP3",
@@ -98,7 +99,7 @@ fun SettingsScreen(
             )
             GText(
                 "Setup in Termux: install yt-dlp and ffmpeg, run termux-setup-storage, and allow external commands in Termux settings. Files are saved to Music. Only download content you have permission to use.",
-                size = 12.sp,
+                size = 11.sp,
                 color = Glass.TextLo,
                 maxLines = 5,
             )
@@ -108,10 +109,10 @@ fun SettingsScreen(
             Modifier.fillMaxWidth().glassCard(RoundedCornerShape(26.dp), strength = 1.1f).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            GText("About Zmusic", size = 19.sp, weight = FontWeight.Bold)
+            GText("About Zmusic", size = 17.sp, weight = FontWeight.Bold)
             GText("A local music player with a little liquid-glass magic.", size = 14.sp, color = Glass.TextLo, maxLines = 2)
             GText("Your music stays on your device.", size = 13.sp, color = Glass.TextLo)
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(4.dp))
     }
 }
