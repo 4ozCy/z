@@ -64,6 +64,15 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0)) }
+    var favoriteIds by remember(prefs) {
+        mutableStateOf(
+            prefs.getStringSet("favoriteSongIds", emptySet())
+                .orEmpty()
+                .mapNotNull { it.toLongOrNull() }
+                .toSet()
+        )
+    }
+    var favoritesOnly by rememberSaveable { mutableStateOf(false) }
     var renameDraft by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
     var pendingRename by remember { mutableStateOf<Pair<Song, String>?>(null) }
@@ -113,8 +122,18 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val onDeleteCurrent: () -> Unit = {
         if (current != null) {
             val deleted = deleteCurrentSong(context, current)
-            if (deleted) vm.refresh()
+            if (deleted) {
+                favoriteIds = favoriteIds - current.id
+                prefs.edit().putStringSet("favoriteSongIds", favoriteIds.map { it.toString() }.toSet()).apply()
+                vm.refresh()
+            }
         }
+    }
+
+    val onToggleFavorite: (Song) -> Unit = { song ->
+        val updated = if (song.id in favoriteIds) favoriteIds - song.id else favoriteIds + song.id
+        favoriteIds = updated
+        prefs.edit().putStringSet("favoriteSongIds", updated.map { it.toString() }.toSet()).apply()
     }
 
     val onExtractAudio: (String) -> Unit = { url ->
@@ -140,6 +159,10 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     pad = pad,
                     onPlay = vm::playQueue,
                     onShuffle = vm::playShuffled,
+                    favoriteIds = favoriteIds,
+                    favoritesOnly = favoritesOnly,
+                    onFavoritesOnlyChange = { favoritesOnly = it },
+                    onToggleFavorite = onToggleFavorite,
                 )
                 1 -> AlbumsScreen(
                     albums = albums,
@@ -159,6 +182,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     accent = accent,
                     pad = pad,
                     onPlay = vm::playQueue,
+                    favoriteIds = favoriteIds,
+                    onToggleFavorite = onToggleFavorite,
                 )
                 4 -> {
                     if (current != null) {
@@ -174,6 +199,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                             onSeek = vm::seekTo,
                             onShuffle = vm::toggleShuffle,
                             onRepeat = vm::cycleRepeat,
+                            isFavorite = current.id in favoriteIds,
+                            onToggleFavorite = { onToggleFavorite(current) },
                         )
                     } else {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -190,6 +217,10 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     pad = pad,
                     onPlay = vm::playQueue,
                     onShuffle = vm::playShuffled,
+                    favoriteIds = favoriteIds,
+                    favoritesOnly = favoritesOnly,
+                    onFavoritesOnlyChange = { favoritesOnly = it },
+                    onToggleFavorite = onToggleFavorite,
                 )
         }
 

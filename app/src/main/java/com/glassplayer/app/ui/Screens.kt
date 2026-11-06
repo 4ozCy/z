@@ -31,11 +31,14 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,6 +124,8 @@ fun SongRow(
     active: Boolean,
     playing: Boolean,
     accent: Color,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(20.dp)
@@ -144,9 +149,20 @@ fun SongRow(
             GText(song.artist, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 1.dp))
         }
         if (active && playing) {
-            EqBars(accent, Modifier.padding(end = 6.dp))
+            EqBars(accent, Modifier.padding(end = 2.dp))
         } else {
-            GText(formatTime(song.durationMs), size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 6.dp))
+            GText(formatTime(song.durationMs), size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 2.dp))
+        }
+        IconButton(
+            onClick = onToggleFavorite,
+            modifier = Modifier.size(36.dp),
+        ) {
+            Icon(
+                imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                contentDescription = if (isFavorite) "Remove from liked songs" else "Add to liked songs",
+                tint = if (isFavorite) Glass.Coral else Glass.TextLo,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
@@ -186,7 +202,16 @@ fun SongsScreen(
     pad: PaddingValues,
     onPlay: (List<Song>, Int) -> Unit,
     onShuffle: (List<Song>) -> Unit,
+    favoriteIds: Set<Long>,
+    favoritesOnly: Boolean,
+    onFavoritesOnlyChange: (Boolean) -> Unit,
+    onToggleFavorite: (Song) -> Unit,
 ) {
+    val visibleSongs = remember(songs, favoriteIds, favoritesOnly) {
+        if (favoritesOnly) songs.filter { it.id in favoriteIds } else songs
+    }
+    val likedCount = songs.count { it.id in favoriteIds }
+
     LazyColumn(
         Modifier.fillMaxSize(),
         state = state,
@@ -195,20 +220,44 @@ fun SongsScreen(
     ) {
         item {
             ScreenHeader(
-                "Songs",
-                if (loaded) songCount(songs.size) else "Scanning your library…",
+                if (favoritesOnly) "Liked songs" else "Songs",
+                if (!loaded) "Scanning your library…"
+                else if (favoritesOnly) "$likedCount songs you saved"
+                else songCount(songs.size),
             ) {
-                if (songs.isNotEmpty()) {
-                    GlassPillButton("Play all", Icons.Rounded.PlayArrow, { onPlay(songs, 0) }, tint = accent)
-                    GlassPillButton("Shuffle", Icons.Rounded.Shuffle, { onShuffle(songs) })
+                if (visibleSongs.isNotEmpty()) {
+                    GlassPillButton("Play all", Icons.Rounded.PlayArrow, { onPlay(visibleSongs, 0) }, tint = accent)
+                    GlassPillButton("Shuffle", Icons.Rounded.Shuffle, { onShuffle(visibleSongs) })
                 }
             }
         }
-        if (loaded && songs.isEmpty()) {
-            item { EmptyNote("No music found", "Copy some songs to this phone and reopen Zmusic.") }
+        item {
+            GlassPillButton(
+                if (favoritesOnly) "Show all songs" else "Liked songs ($likedCount)",
+                if (favoritesOnly) Icons.Rounded.LibraryMusic else Icons.Rounded.Favorite,
+                { onFavoritesOnlyChange(!favoritesOnly) },
+                tint = if (favoritesOnly) accent else Glass.Coral,
+            )
         }
-        itemsIndexed(songs, key = { _, s -> s.id }) { i, s ->
-            SongRow(s, s.id == ui.currentId, ui.isPlaying, accent) { onPlay(songs, i) }
+        if (loaded && visibleSongs.isEmpty()) {
+            item {
+                EmptyNote(
+                    if (favoritesOnly) "No liked songs yet" else "No music found",
+                    if (favoritesOnly) "Tap the heart beside any song to save it here."
+                    else "Copy some songs to this phone and reopen Zmusic.",
+                )
+            }
+        }
+        itemsIndexed(visibleSongs, key = { _, s -> s.id }) { i, s ->
+            SongRow(
+                song = s,
+                active = s.id == ui.currentId,
+                playing = ui.isPlaying,
+                accent = accent,
+                isFavorite = s.id in favoriteIds,
+                onToggleFavorite = { onToggleFavorite(s) },
+                onClick = { onPlay(visibleSongs, i) },
+            )
         }
     }
 }
@@ -289,6 +338,8 @@ fun SearchScreen(
     accent: Color,
     pad: PaddingValues,
     onPlay: (List<Song>, Int) -> Unit,
+    favoriteIds: Set<Long>,
+    onToggleFavorite: (Song) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val results = remember(songs, query) {
@@ -347,7 +398,15 @@ fun SearchScreen(
             item { EmptyNote("Nothing matches “${query.trim()}”", "Check the spelling or try an artist name.") }
         }
         itemsIndexed(results, key = { _, s -> s.id }) { i, s ->
-            SongRow(s, s.id == ui.currentId, ui.isPlaying, accent) { onPlay(results, i) }
+            SongRow(
+                song = s,
+                active = s.id == ui.currentId,
+                playing = ui.isPlaying,
+                accent = accent,
+                isFavorite = s.id in favoriteIds,
+                onToggleFavorite = { onToggleFavorite(s) },
+                onClick = { onPlay(results, i) },
+            )
         }
     }
 }

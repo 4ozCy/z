@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -76,6 +78,8 @@ fun NowPlaying(
     onSeek: (Long) -> Unit,
     onShuffle: () -> Unit,
     onRepeat: () -> Unit,
+    isFavorite: Boolean,
+    onToggleFavorite: () -> Unit,
     wallpaperUri: Uri? = null,
 ) {
     val glow by animateColorAsState(accent, tween(700), label = "nowPlayingAccent")
@@ -96,6 +100,15 @@ fun NowPlaying(
                     modifier = Modifier.align(Alignment.CenterStart), size = 44.dp,
                 )
                 GText("Now playing", size = 15.sp, weight = FontWeight.Medium, color = Glass.TextLo)
+                GlassIconButton(
+                    if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                    if (isFavorite) "Remove from liked songs" else "Add to liked songs",
+                    onToggleFavorite,
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    size = 44.dp,
+                    iconSize = 22.dp,
+                    tint = if (isFavorite) Glass.Coral else Glass.TextLo,
+                )
             }
 
             BoxWithConstraints(
