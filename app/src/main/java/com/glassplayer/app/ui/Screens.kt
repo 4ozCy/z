@@ -93,13 +93,13 @@ fun ScreenHeader(
     modifier: Modifier = Modifier,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    Column(modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-        GText(title, size = 36.sp, weight = FontWeight.ExtraBold, tracking = (-1).sp)
-        GText(subtitle, size = 14.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
+    Column(modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+        GText(title, size = 28.sp, weight = FontWeight.Bold, tracking = (-0.5).sp)
+        GText(subtitle, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 3.dp))
         if (actions != null) {
             Row(
-                Modifier.padding(top = 14.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Modifier.padding(top = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) { actions() }
         }
@@ -109,12 +109,12 @@ fun ScreenHeader(
 @Composable
 fun EmptyNote(title: String, body: String) {
     Column(
-        Modifier.fillMaxWidth().padding(top = 48.dp, start = 12.dp, end = 12.dp),
+        Modifier.fillMaxWidth().padding(top = 36.dp, start = 12.dp, end = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        GText(title, size = 18.sp, weight = FontWeight.SemiBold, align = TextAlign.Center)
-        GText(body, size = 14.sp, color = Glass.TextLo, maxLines = 3, align = TextAlign.Center)
+        GText(title, size = 16.sp, weight = FontWeight.SemiBold, align = TextAlign.Center)
+        GText(body, size = 13.sp, color = Glass.TextLo, maxLines = 3, align = TextAlign.Center)
     }
 }
 
@@ -128,30 +128,30 @@ fun SongRow(
     onToggleFavorite: () -> Unit,
     onClick: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(12.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .then(if (active) Modifier.glassCard(shape, accent, 1.3f) else Modifier)
+            .then(if (active) Modifier.glassCard(shape, accent, 0.9f) else Modifier)
             .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Artwork(song, Modifier.size(52.dp), RoundedCornerShape(14.dp))
+        Artwork(song, Modifier.size(44.dp), RoundedCornerShape(8.dp))
         Column(Modifier.weight(1f)) {
             GText(
                 song.title,
-                size = 16.sp,
+                size = 14.sp,
                 weight = FontWeight.SemiBold,
                 color = if (active) accent else Glass.TextHi,
             )
-            GText(song.artist, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 1.dp))
+            GText(song.artist, size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
         }
         if (active && playing) {
             EqBars(accent, Modifier.padding(end = 2.dp))
         } else {
-            GText(formatTime(song.durationMs), size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 2.dp))
+            GText(formatTime(song.durationMs), size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 2.dp))
         }
         IconButton(
             onClick = onToggleFavorite,
@@ -161,7 +161,7 @@ fun SongRow(
                 imageVector = if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                 contentDescription = if (isFavorite) "Remove from liked songs" else "Add to liked songs",
                 tint = if (isFavorite) Glass.Coral else Glass.TextLo,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -173,16 +173,16 @@ fun PermissionScreen(onGrant: () -> Unit) {
         Column(
             Modifier
                 .fillMaxWidth()
-                .glassCard(RoundedCornerShape(36.dp), strength = 1.2f)
-                .padding(28.dp),
+                .glassCard(RoundedCornerShape(20.dp), strength = 0.95f)
+                .padding(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.Rounded.LibraryMusic, null, tint = Glass.Aqua, modifier = Modifier.size(44.dp))
-            GText("Your music, on this phone", size = 24.sp, weight = FontWeight.Bold, align = TextAlign.Center, maxLines = 2, tracking = (-0.4).sp)
+            Icon(Icons.Rounded.LibraryMusic, null, tint = Glass.Aqua, modifier = Modifier.size(36.dp))
+            GText("Your music, on this phone", size = 20.sp, weight = FontWeight.Bold, align = TextAlign.Center, maxLines = 2, tracking = (-0.4).sp)
             GText(
                 "Zmusic reads the audio files stored on your device to build your library. Nothing is uploaded.",
-                size = 15.sp, color = Glass.TextLo, maxLines = 4, align = TextAlign.Center,
+                size = 13.sp, color = Glass.TextLo, maxLines = 4, align = TextAlign.Center,
             )
             Spacer(Modifier.height(6.dp))
             GlassPillButton("Allow music access", Icons.Rounded.PlayArrow, onGrant, tint = Glass.Aqua)
@@ -274,25 +274,25 @@ fun AlbumsScreen(
         modifier = Modifier.fillMaxSize(),
         state = state,
         contentPadding = pad,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             ScreenHeader("Albums", "${albums.size} in your library")
         }
         items(albums, key = { it.songs.first().id }) { album ->
-            val shape = RoundedCornerShape(26.dp)
+            val shape = RoundedCornerShape(16.dp)
             Column(
                 Modifier
                     .fillMaxWidth()
                     .glassCard(shape)
                     .clickable { onOpen(album) }
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                    .padding(7.dp),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
             ) {
-                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1f), RoundedCornerShape(18.dp))
-                GText(album.title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp, start = 2.dp))
-                GText(album.subtitle, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1f), RoundedCornerShape(10.dp))
+                GText(album.title, size = 14.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 7.dp, start = 2.dp))
+                GText(album.subtitle, size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             }
         }
     }
@@ -317,14 +317,14 @@ fun ArtistsScreen(
                 Modifier
                     .fillMaxWidth()
                     .clickable { onOpen(artist) }
-                    .padding(horizontal = 8.dp, vertical = 5.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Artwork(artist.songs.first(), Modifier.size(56.dp), CircleShape)
+                Artwork(artist.songs.first(), Modifier.size(44.dp), CircleShape)
                 Column(Modifier.weight(1f)) {
-                    GText(artist.title, size = 16.sp, weight = FontWeight.SemiBold)
-                    GText(artist.subtitle, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
+                    GText(artist.title, size = 14.sp, weight = FontWeight.SemiBold)
+                    GText(artist.subtitle, size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
                 }
             }
         }
@@ -363,22 +363,22 @@ fun SearchScreen(
                 onValueChange = { query = it },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(color = Glass.TextHi, fontSize = 17.sp),
+                textStyle = TextStyle(color = Glass.TextHi, fontSize = 15.sp),
                 cursorBrush = SolidColor(accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 decorationBox = { inner ->
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .height(54.dp)
-                            .glassCard(CircleShape, strength = 1.2f)
+                            .height(48.dp)
+                            .glassCard(RoundedCornerShape(14.dp), strength = 0.8f)
                             .padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(Icons.Rounded.Search, null, tint = Glass.TextLo)
                         Box(Modifier.weight(1f)) {
-                            if (query.isEmpty()) GText("Search your music", size = 17.sp, color = Glass.TextLo)
+                            if (query.isEmpty()) GText("Search your music", size = 15.sp, color = Glass.TextLo)
                             inner()
                         }
                         if (query.isNotEmpty()) {

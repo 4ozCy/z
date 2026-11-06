@@ -79,9 +79,9 @@ fun Dock(
         modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, bottom = 12.dp)
+            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
             .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         if (current != null) {
             MiniPlayer(current, ui, position, accent, onTogglePlay, onNext, onOpenPlayer)
@@ -100,11 +100,11 @@ private fun MiniPlayer(
     onNext: () -> Unit,
     onOpen: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(33.dp)
+    val shape = RoundedCornerShape(16.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .height(66.dp)
+            .height(58.dp)
             .dockGlass(shape, accent)
             .clickable(onClick = onOpen)
             .drawBehind {
@@ -121,17 +121,17 @@ private fun MiniPlayer(
             }
             .padding(start = 10.dp, end = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Artwork(song, Modifier.size(46.dp), RoundedCornerShape(15.dp))
+        Artwork(song, Modifier.size(40.dp), RoundedCornerShape(8.dp))
         Column(Modifier.weight(1f)) {
-            GText(song.title, size = 15.sp, weight = FontWeight.SemiBold)
-            GText(song.artist, size = 11.sp, color = Glass.TextLo)
+            GText(song.title, size = 14.sp, weight = FontWeight.SemiBold)
+            GText(song.artist, size = 12.sp, color = Glass.TextLo)
         }
-        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(44.dp))
+        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(38.dp))
         GlassIconButton(
             Icons.Rounded.SkipNext, "Next song", onNext,
-            size = 42.dp, iconSize = 26.dp, filled = false,
+            size = 36.dp, iconSize = 22.dp, filled = false,
         )
     }
 }
@@ -165,14 +165,14 @@ private fun NavPill(
     // The lens slides on an under-damped spring, so it overshoots and settles like a drop of liquid.
     val pos = remember { Animatable(selected.toFloat()) }
     LaunchedEffect(selected) {
-        pos.animateTo(selected.toFloat(), spring(dampingRatio = 0.52f, stiffness = 240f))
+        pos.animateTo(selected.toFloat(), spring(dampingRatio = 0.88f, stiffness = 340f))
     }
-    val shape = RoundedCornerShape(34.dp)
+    val shape = RoundedCornerShape(18.dp)
 
     Row(
         Modifier
             .fillMaxWidth()
-            .height(68.dp)
+            .height(60.dp)
             .dockGlass(shape)
             .drawBehind {
                 val itemW = size.width / NavTabs.size
@@ -184,7 +184,7 @@ private fun NavPill(
                 val top = (size.height - h) / 2f
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.40f), Color.White.copy(alpha = 0.12f)),
+                        listOf(accent.copy(alpha = 0.17f), Color.White.copy(alpha = 0.035f)),
                         startY = top,
                         endY = top + h,
                     ),
@@ -194,14 +194,14 @@ private fun NavPill(
                 )
                 drawRoundRect(
                     brush = Brush.linearGradient(
-                        listOf(Color.White.copy(alpha = 0.85f), Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.5f)),
+                        listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.025f), Color.White.copy(alpha = 0.12f)),
                         start = Offset(left, top),
                         end = Offset(left + w, top + h),
                     ),
                     topLeft = Offset(left, top),
                     size = Size(w, h),
                     cornerRadius = CornerRadius(h / 2f),
-                    style = Stroke(width = 1.2.dp.toPx()),
+                    style = Stroke(width = 0.7.dp.toPx()),
                 )
             },
     ) {
@@ -225,10 +225,10 @@ private fun NavPill(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(24.dp))
+                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(22.dp))
                 GText(
                     t.label,
-                    size = 11.sp,
+                    size = 10.sp,
                     weight = if (active) FontWeight.SemiBold else FontWeight.Medium,
                     color = color,
                     modifier = Modifier.padding(top = 2.dp),

@@ -39,20 +39,20 @@ fun QueueScreen(
     onRemove: (Int) -> Unit,
 ) {
     Column(
-        Modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             GlassIconButton(Icons.Rounded.ArrowBack, "Back to player", onBack, size = 42.dp)
             Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                GText("Up next", size = 26.sp, weight = FontWeight.ExtraBold)
+                GText("Up next", size = 24.sp, weight = FontWeight.ExtraBold)
                 GText(queue.size.toString() + " tracks in queue", size = 13.sp, color = Glass.TextLo)
             }
         }
 
         if (queue.isEmpty()) {
             Column(
-                Modifier.fillMaxWidth().glassCard(RoundedCornerShape(24.dp), strength = 1.0f).padding(18.dp),
+                Modifier.fillMaxWidth().glassCard(RoundedCornerShape(16.dp), strength = 0.9f).padding(14.dp),
             ) {
                 GText("Queue is empty", size = 17.sp, weight = FontWeight.Bold)
                 GText("Play a song or an album to build your queue.", size = 13.sp, color = Glass.TextLo, maxLines = 3)
@@ -60,34 +60,34 @@ fun QueueScreen(
         } else {
             LazyColumn(
                 Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
                 itemsIndexed(queue, key = { index, song -> index.toString() + "-" + song.id }) { index, song ->
                     Row(
                         Modifier.fillMaxWidth()
-                            .then(if (index == currentIndex) Modifier.glassCard(RoundedCornerShape(18.dp), Glass.Aqua, 1.2f) else Modifier)
+                            .then(if (index == currentIndex) Modifier.glassCard(RoundedCornerShape(12.dp), Glass.Aqua, 0.9f) else Modifier)
                             .clickable { onPlay(index) }
-                            .padding(horizontal = 8.dp, vertical = 7.dp),
+                            .padding(horizontal = 7.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
-                        Artwork(song, Modifier.size(42.dp), RoundedCornerShape(12.dp))
+                        Artwork(song, Modifier.size(40.dp), RoundedCornerShape(8.dp))
                         Column(Modifier.weight(1f)) {
-                            GText(song.title, size = 13.sp, weight = FontWeight.SemiBold, color = if (index == currentIndex) Glass.Aqua else Glass.TextHi)
+                            GText(song.title, size = 14.sp, weight = FontWeight.SemiBold, color = if (index == currentIndex) Glass.Aqua else Glass.TextHi)
                             GText(
                                 if (index == currentIndex) "Now playing · " + song.artist else song.artist,
                                 size = 11.sp,
                                 color = Glass.TextLo,
                             )
                         }
-                        IconButton(onClick = { onMove(index, index - 1) }, enabled = index > 0, modifier = Modifier.size(30.dp)) {
+                        IconButton(onClick = { onMove(index, index - 1) }, enabled = index > 0, modifier = Modifier.size(28.dp)) {
                             Icon(Icons.Rounded.KeyboardArrowUp, contentDescription = "Move up", tint = if (index > 0) Glass.TextHi else Glass.TextLo.copy(alpha = 0.3f))
                         }
                         IconButton(onClick = { onMove(index, index + 1) }, enabled = index < queue.lastIndex, modifier = Modifier.size(30.dp)) {
                             Icon(Icons.Rounded.KeyboardArrowDown, contentDescription = "Move down", tint = if (index < queue.lastIndex) Glass.TextHi else Glass.TextLo.copy(alpha = 0.3f))
                         }
                         IconButton(onClick = { onRemove(index) }, modifier = Modifier.size(30.dp)) {
-                            Icon(Icons.Rounded.Close, contentDescription = "Remove from queue", tint = Color(0xFFFF8A9B))
+                            Icon(Icons.Rounded.Close, contentDescription = "Remove from queue", tint = Glass.Coral)
                         }
                     }
                 }

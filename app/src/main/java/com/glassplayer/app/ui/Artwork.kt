@@ -1,76 +1,143 @@
 package com.glassplayer.app.ui
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
+import android.util.LruCache
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.glassplayer.app.data.Song
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.absoluteValue
 
-/** No images are loaded anywhere: every song gets a colour from its album/artist name instead. */
-fun songHue(song: Song?): Float {
-    if (song == null) return 200f
-    val key = if (song.albumId > 0) song.album else song.artist
-    return (key.hashCode().absoluteValue % 360).toFloat()
+private val artworkCache = object : LruCache<Long, Bitmap>(12 * 1024 * 1024) {
+    override fun sizeOf(key: Long, value: Bitmap): Int = value.byteCount
 }
 
-fun accentFor(song: Song?): Color =
-    if (song == null) Glass.Aqua else Color.hsv(songHue(song), 0.55f, 1f)
+fun songHue(song: Song?): Float {
+    val key = song?.album?.takeIf { it.isNotBlank() } ?: song?.artist.orEmpty()
+    return 142f + (key.hashCode().absoluteValue % 26).toFloat()
+}
 
-/** A plain colour tile with a music note. Drawn directly as a rounded rect, with no clip layer. */
+fun accentFor(song: Song?): Color = Glass.Aqua
+
 @Composable
 fun Artwork(
     song: Song?,
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(14.dp),
+    shape: Shape = androidx.compose.foundation.shape.RoundedCornerShape(10.dp),
 ) {
+    val context = LocalContext.current
+    var bitmap by remember(song?.id) {
+        mutableStateOf(song?.id?.let { artworkCache.get(it) })
+    }
+
+    LaunchedEffect(song?.id, song?.uri) {
+        val selectedSong = song ?: return@LaunchedEffect
+        if (bitmap == null) {
+            val loaded = withContext(Dispatchers.IO) {
+                loadEmbeddedArtwork(context.applicationContext, selectedSong)
+            }
+            if (loaded != null) {
+                artworkCache.put(selectedSong.id, loaded)
+                bitmap = loaded
+            }
+        }
+    }
+
     val hue = songHue(song)
     Box(
-        modifier.background(
+        modifier.clip(shape).background(
             Brush.linearGradient(
-                listOf(Color.hsv(hue, 0.55f, 0.78f), Color.hsv((hue + 40f) % 360f, 0.65f, 0.42f))
-            ),
-            shape,
+                listOf(
+                    Color.hsv(hue, 0.20f, 0.24f),
+                    Color.hsv((hue + 10f) % 360f, 0.24f, 0.12f),
+                )
+            )
         ),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            Icons.Rounded.MusicNote,
-            contentDescription = null,
-            tint = Color.White.copy(alpha = 0.78f),
-            modifier = Modifier.fillMaxSize(0.45f),
-        )
+        val art = bitmap
+        if (art != null) {
+            Image(
+                bitmap = art.asImageBitmap(),
+                contentDescription = "Album artwork",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+        } else {
+            Icon(
+                Icons.Rounded.MusicNote,
+                contentDescription = null,
+                tint = Color.White.copy(alpha = 0.62f),
+                modifier = Modifier.fillMaxSize(0.38f),
+            )
+        }
     }
 }
 
-/** Three still bars marking the song that is playing. Static on purpose: a looping animation
- *  makes the whole screen redraw every frame, which is exactly what causes stutter. */
+private fun loadEmbeddedArtwork(context: Context, song: Song): Bitmap? {
+    val retriever = MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(context, song.uri)
+        val picture = retriever.embeddedPicture ?: return null
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(picture, 0, picture.size, bounds)
+        var sample = 1
+        while (bounds.outWidth / sample > 512 || bounds.outHeight / sample > 512) {
+            sample *= 2
+        }
+        BitmapFactory.decodeByteArray(
+            picture,
+            0,
+            picture.size,
+            BitmapFactory.Options().apply {
+                inSampleSize = sample
+                inPreferredConfig = Bitmap.Config.RGB_565
+            },
+        )
+    } catch (_: Exception) {
+        null
+    } finally {
+        runCatching { retriever.release() }
+    }
+}
+
 @Composable
 fun EqBars(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(18.dp)) {
+    Canvas(modifier) {
         val w = size.width / 5f
         floatArrayOf(0.55f, 1f, 0.7f).forEachIndexed { i, v ->
             val h = size.height * v
             drawRoundRect(
                 color = color,
-                topLeft = Offset(i * 2 * w, size.height - h),
-                size = Size(w, h),
-                cornerRadius = CornerRadius(w / 2f),
+                topLeft = androidx.compose.ui.geometry.Offset(i * 2 * w, size.height - h),
+                size = androidx.compose.ui.geometry.Size(w, h),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(w / 2f),
             )
         }
     }

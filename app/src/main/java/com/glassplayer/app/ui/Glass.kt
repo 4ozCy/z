@@ -29,20 +29,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Glass {
-    val Ink = Color(0xFF060912)
-    val Aqua = Color(0xFF6FE3FF)
-    val Violet = Color(0xFF7B6CFF)
-    val Coral = Color(0xFFFF7AA2)
-    val TextHi = Color(0xFFF5F8FF)
-    val TextLo = Color(0xFFA3AEC6)
+    val Ink = Color(0xFF0B0D0C)
+    val Aqua = Color(0xFF70D6A3)
+    val Violet = Color(0xFF8F9AB0)
+    val Coral = Color(0xFFE69A9D)
+    val TextHi = Color(0xFFF3F5F3)
+    val TextLo = Color(0xFFA2AAA5)
 }
 
 /** Bright on the top-left and bottom-right edges, nearly clear between: the "light catching glass" rim. */
 val RimBrush: Brush = Brush.linearGradient(
-    0f to Color.White.copy(alpha = 0.75f),
-    0.30f to Color.White.copy(alpha = 0.12f),
-    0.70f to Color.White.copy(alpha = 0.06f),
-    1f to Color.White.copy(alpha = 0.45f),
+    0f to Color.White.copy(alpha = 0.20f),
+    0.30f to Color.White.copy(alpha = 0.07f),
+    0.70f to Color.White.copy(alpha = 0.035f),
+    1f to Color.White.copy(alpha = 0.14f),
 )
 
 /** Frosted card for surfaces that sit on the already-blurred backdrop. No live blur, so it is cheap in lists. */
@@ -52,24 +52,24 @@ fun Modifier.glassCard(shape: Shape, tint: Color = Color.White, strength: Float 
         .background(
             Brush.verticalGradient(
                 listOf(
-                    tint.copy(alpha = (0.16f * strength).coerceAtMost(1f)),
-                    tint.copy(alpha = (0.05f * strength).coerceAtMost(1f)),
+                    tint.copy(alpha = (0.075f * strength).coerceAtMost(1f)),
+                    tint.copy(alpha = (0.035f * strength).coerceAtMost(1f)),
                 )
             )
         )
-        .border(1.dp, RimBrush, shape)
+        .border(1.dp, Color.White.copy(alpha = 0.105f), shape)
 
 /** Frosted fill for the floating dock. A dark base keeps text readable, a light sheen and rim make it glass. */
 fun Modifier.dockGlass(shape: Shape, tint: Color = Color.White): Modifier =
     this
         .clip(shape)
-        .background(Glass.Ink.copy(alpha = 0.64f))
+        .background(Glass.Ink.copy(alpha = 0.86f))
         .background(
             Brush.verticalGradient(
-                listOf(tint.copy(alpha = 0.22f), tint.copy(alpha = 0.07f))
+                listOf(tint.copy(alpha = 0.12f), tint.copy(alpha = 0.035f))
             )
         )
-        .border(1.dp, RimBrush, shape)
+        .border(1.dp, Color.White.copy(alpha = 0.13f), shape)
 
 @Composable
 fun GText(
@@ -128,14 +128,14 @@ fun GlassPillButton(
 ) {
     Row(
         modifier
-            .height(44.dp)
-            .glassCard(CircleShape, tint, 1.3f)
+            .height(40.dp)
+            .glassCard(CircleShape, tint, 0.9f)
             .clickable(onClick = onClick)
-            .padding(horizontal = 18.dp),
+            .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = Glass.TextHi, modifier = Modifier.size(20.dp))
-        GText(text, size = 15.sp, weight = FontWeight.SemiBold)
+        Icon(icon, contentDescription = null, tint = Glass.TextHi, modifier = Modifier.size(18.dp))
+        GText(text, size = 14.sp, weight = FontWeight.SemiBold)
     }
 }

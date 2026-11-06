@@ -42,21 +42,21 @@ fun GlassBackdrop(
             drawRect(if (wallpaperUri == null) Glass.Ink else Color.Black.copy(alpha = 0.48f))
             drawRect(
                 Brush.radialGradient(
-                    listOf(glow.copy(alpha = 0.35f), Color.Transparent),
+                    listOf(glow.copy(alpha = 0.13f), Color.Transparent),
                     center = Offset(size.width * 0.10f, size.height * 0.05f),
                     radius = size.maxDimension * 0.62f,
                 )
             )
             drawRect(
                 Brush.radialGradient(
-                    listOf(Glass.Coral.copy(alpha = 0.16f), Color.Transparent),
+                    listOf(Glass.Coral.copy(alpha = 0.025f), Color.Transparent),
                     center = Offset(size.width * 0.95f, size.height * 0.78f),
                     radius = size.maxDimension * 0.55f,
                 )
             )
             drawRect(
                 Brush.radialGradient(
-                    listOf(Glass.Violet.copy(alpha = 0.16f), Color.Transparent),
+                    listOf(Glass.Violet.copy(alpha = 0.025f), Color.Transparent),
                     center = Offset(size.width * 0.8f, size.height * 0.25f),
                     radius = size.maxDimension * 0.45f,
                 )

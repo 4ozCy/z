@@ -147,19 +147,19 @@ fun NowPlaying(
                     spring(dampingRatio = 0.5f, stiffness = 260f),
                     label = "artScale",
                 )
-                val shape = RoundedCornerShape(38.dp)
+                val shape = RoundedCornerShape(18.dp)
                 Box(
                     Modifier
                         .size(side)
                         .graphicsLayer { scaleX = scale; scaleY = scale }
-                        .border(1.5.dp, RimBrush, shape),
+                        .border(1.dp, Color.White.copy(alpha = 0.12f), shape),
                 ) {
                     Artwork(song, Modifier.fillMaxSize(), shape)
                 }
             }
 
-            GText(song.title, size = 28.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.6).sp)
-            GText(song.artist, size = 17.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 4.dp))
+            GText(song.title, size = 24.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.6).sp)
+            GText(song.artist, size = 15.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 4.dp))
 
             Row(
                 Modifier.fillMaxWidth().padding(top = 10.dp),
@@ -168,8 +168,8 @@ fun NowPlaying(
                 listOf(0.75f, 1f, 1.25f, 1.5f, 2f).forEach { speed ->
                     val selectedSpeed = kotlin.math.abs(playbackSpeed - speed) < 0.03f
                     Box(
-                        Modifier.weight(1f).height(34.dp)
-                            .glassCard(RoundedCornerShape(13.dp), if (selectedSpeed) glow else Color.White, if (selectedSpeed) 1.25f else 0.8f)
+                        Modifier.weight(1f).height(30.dp)
+                            .glassCard(RoundedCornerShape(10.dp), if (selectedSpeed) glow else Color.White, if (selectedSpeed) 0.9f else 0.45f)
                             .clickable { onSetPlaybackSpeed(speed) },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -184,21 +184,21 @@ fun NowPlaying(
             }
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 7.dp),
+                Modifier.fillMaxWidth().padding(top = 5.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 GlassPillButton(
                     if (sleepTimerRemainingMs > 0L) "Sleep · " + formatSleepCountdown(sleepTimerRemainingMs) else "Sleep timer",
                     Icons.Rounded.Timer,
                     { showSleepTimer = true },
-                    tint = if (sleepTimerRemainingMs > 0L) glow else Color.White,
+                    tint = if (sleepTimerRemainingMs > 0L) glow else Glass.TextLo,
                 )
             }
 
             SeekSection(position, ui.durationMs, glow, onSeek)
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 14.dp),
+                Modifier.fillMaxWidth().padding(top = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -209,7 +209,7 @@ fun NowPlaying(
                 )
                 GlassIconButton(
                     Icons.Rounded.SkipPrevious, "Previous song", onPrevious,
-                    size = 60.dp, iconSize = 36.dp, filled = false,
+                    size = 54.dp, iconSize = 32.dp, filled = false,
                 )
                 BigPlayButton(ui.isPlaying, glow, onTogglePlay)
                 GlassIconButton(
@@ -235,19 +235,19 @@ fun NowPlaying(
             ) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 22.dp)
-                        .glassCard(RoundedCornerShape(28.dp), glow, 1.5f)
-                        .padding(18.dp),
+                        .glassCard(RoundedCornerShape(20.dp), glow, 0.95f)
+                        .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            GText("Sleep timer", size = 22.sp, weight = FontWeight.Bold)
-                            GText("Pause playback automatically", size = 13.sp, color = Glass.TextLo)
+                            GText("Sleep timer", size = 20.sp, weight = FontWeight.Bold)
+                            GText("Pause playback automatically", size = 12.sp, color = Glass.TextLo)
                         }
                         GlassIconButton(Icons.Rounded.KeyboardArrowDown, "Close timer", { showSleepTimer = false }, size = 38.dp)
                     }
                     if (sleepTimerRemainingMs > 0L) {
-                        GText("Active · " + formatSleepCountdown(sleepTimerRemainingMs) + " remaining", size = 13.sp, color = glow)
+                        GText("Active · " + formatSleepCountdown(sleepTimerRemainingMs) + " remaining", size = 12.sp, color = glow)
                     }
                     listOf(5, 10, 15, 30, 45, 60).chunked(3).forEach { minuteRow ->
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -292,7 +292,7 @@ private fun formatSleepCountdown(milliseconds: Long): String {
 @Composable
 private fun SeekSection(position: State<Long>, durationMs: Long, accent: Color, onSeek: (Long) -> Unit) {
     val pos by position
-    Column(Modifier.padding(top = 20.dp)) {
+    Column(Modifier.padding(top = 14.dp)) {
         GlassSeekBar(
             progress = if (durationMs > 0) pos.toFloat() / durationMs else 0f,
             accent = accent,
@@ -316,7 +316,7 @@ private fun BigPlayButton(playing: Boolean, accent: Color, onClick: () -> Unit) 
     )
     Box(
         Modifier
-            .size(84.dp)
+            .size(76.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .glassCard(CircleShape, accent, 2.2f)
             .clickable(interactionSource = source, indication = null, onClick = onClick),
@@ -327,7 +327,7 @@ private fun BigPlayButton(playing: Boolean, accent: Color, onClick: () -> Unit) 
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 contentDescription = if (isPlaying) "Pause" else "Play",
                 tint = Glass.TextHi,
-                modifier = Modifier.size(42.dp),
+                modifier = Modifier.size(38.dp),
             )
         }
     }

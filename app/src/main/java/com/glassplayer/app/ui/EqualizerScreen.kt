@@ -48,7 +48,7 @@ fun EqualizerScreen(onBack: () -> Unit) {
     }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(
@@ -58,19 +58,19 @@ fun EqualizerScreen(onBack: () -> Unit) {
         ) {
             GlassIconButton(Icons.Rounded.ArrowBack, "Back to player", onBack, size = 42.dp)
             Column(Modifier.weight(1f)) {
-                GText("Sound Studio", size = 26.sp, weight = FontWeight.ExtraBold)
-                GText("Shape your sound", size = 13.sp, color = Glass.TextLo)
+                GText("Sound Studio", size = 24.sp, weight = FontWeight.ExtraBold)
+                GText("Shape your sound", size = 12.sp, color = Glass.TextLo)
             }
             GlassIconButton(Icons.Rounded.GraphicEq, "Equalizer", {}, size = 42.dp, tint = Glass.Aqua)
         }
 
         Column(
-            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(24.dp), Glass.Aqua, 1.25f).padding(14.dp),
+            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(16.dp), Glass.Aqua, 1.25f).padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    GText("Equalizer", size = 18.sp, weight = FontWeight.Bold)
+                    GText("Equalizer", size = 16.sp, weight = FontWeight.Bold)
                     GText(
                         if (state.equalizerAvailable) state.bands.size.toString() + "-band audio engine"
                         else "Device audio effect",
@@ -82,7 +82,7 @@ fun EqualizerScreen(onBack: () -> Unit) {
                     if (state.equalizerEnabled) "On" else "Off",
                     Icons.Rounded.Tune,
                     { state = AudioEffectsController.setEqualizerEnabled(!state.equalizerEnabled) },
-                    tint = if (state.equalizerEnabled) Glass.Aqua else Color.White,
+                    tint = if (state.equalizerEnabled) Glass.Aqua else Glass.TextLo,
                 )
             }
             if (state.equalizerAvailable) {
@@ -142,14 +142,14 @@ fun EqualizerScreen(onBack: () -> Unit) {
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        GText("Bass boost", size = 17.sp, weight = FontWeight.Bold)
+                        GText("Bass boost", size = 16.sp, weight = FontWeight.Bold)
                         GText("Add weight to the low end", size = 12.sp, color = Glass.TextLo)
                     }
                     GlassPillButton(
                         if (state.bassEnabled) "On" else "Off",
                         Icons.Rounded.GraphicEq,
                         { state = AudioEffectsController.setBassEnabled(!state.bassEnabled) },
-                        tint = if (state.bassEnabled) Glass.Violet else Color.White,
+                        tint = if (state.bassEnabled) Glass.Aqua else Glass.TextLo,
                     )
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -172,14 +172,14 @@ fun EqualizerScreen(onBack: () -> Unit) {
             ) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        GText("Stereo widening", size = 17.sp, weight = FontWeight.Bold)
+                        GText("Stereo widening", size = 16.sp, weight = FontWeight.Bold)
                         GText("Create a wider headphone image", size = 12.sp, color = Glass.TextLo)
                     }
                     GlassPillButton(
                         if (state.virtualizerEnabled) "On" else "Off",
                         Icons.Rounded.SurroundSound,
                         { state = AudioEffectsController.setVirtualizerEnabled(!state.virtualizerEnabled) },
-                        tint = if (state.virtualizerEnabled) Glass.Aqua else Color.White,
+                        tint = if (state.virtualizerEnabled) Glass.Aqua else Glass.TextLo,
                     )
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -196,7 +196,7 @@ fun EqualizerScreen(onBack: () -> Unit) {
         }
 
         Column(
-            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(22.dp), strength = 0.9f).padding(14.dp),
+            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(16.dp), strength = 0.9f).padding(14.dp),
         ) {
             GText("Sound settings are saved on this device. Availability depends on the phone's audio-effect engine.", size = 12.sp, color = Glass.TextLo, maxLines = 3)
         }
