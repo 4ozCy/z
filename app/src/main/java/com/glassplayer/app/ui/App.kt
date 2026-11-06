@@ -303,76 +303,157 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
         var savedUri: android.net.Uri? = null
         var tempFile: File? = null
         try {
-            val form = "youtube_url=${URLEncoder.encode(url.trim(), "UTF-8")}&quality=192"
-            val apiConnection = (URL("https://ytmp3.ge/api/convert").openConnection() as HttpURLConnection).apply {
+            val cleanUrl = url.trim()
+            if (cleanUrl.isBlank()) throw IllegalArgumentException("Enter a YouTube URL")
+
+            val infoUrl = "https://api.vevioz.com/api/v1/info?url=" + URLEncoder.encode(cleanUrl, "UTF-8")
+            val infoConnection = (URL(infoUrl).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = 20_000
+                readTimeout = 45_000
+                setRequestProperty("Accept", "application/json")
+                setRequestProperty("User-Agent", "Zmusic/1.0 (Android)")
+            }
+            val infoText: String
+            try {
+                val status = infoConnection.responseCode
+                infoText = readHttpResponse(infoConnection)
+                if (status !in 200..299) {
+                    throw IllegalStateException("Vevioz metadata request returned HTTP " + status + ": " + responseMessage(infoText))
+                }
+            } finally {
+                infoConnection.disconnect()
+            }
+
+            val info = JSONObject(infoText)
+            val infoError = findJsonString(info, setOf("error", "message", "detail"))
+            if (!info.optBoolean("success", true)) {
+                throw IllegalStateException(infoError ?: "Vevioz could not read this video")
+            }
+
+            val formats = findJsonArray(info, setOf("formats", "available_formats", "availableFormats", "audio_formats", "audioFormats"))
+            var formatId = ""
+            if (formats != null) {
+                var foundMp3 = false
+                for (i in 0 until formats.length()) {
+                    val item = formats.optJSONObject(i) ?: continue
+                    val formatName = findJsonString(item, setOf("format", "type", "ext", "container", "mime_type", "mimeType")).orEmpty()
+                    val itemId = findJsonString(item, setOf("format_id", "formatId", "id")).orEmpty()
+                    if (formatName.contains("mp3", ignoreCase = true) || itemId.contains("mp3", ignoreCase = true)) {
+                        foundMp3 = true
+                        formatId = itemId
+                        break
+                    }
+                }
+                if (!foundMp3) throw IllegalStateException("Vevioz does not list an MP3 format for this video")
+            }
+
+            val jobRequest = JSONObject()
+                .put("url", cleanUrl)
+                .put("format", "mp3")
+                .put("quality", "192")
+            if (formatId.isNotBlank()) jobRequest.put("format_id", formatId)
+
+            val jobConnection = (URL("https://api.vevioz.com/api/v1/jobs").openConnection() as HttpURLConnection).apply {
                 requestMethod = "POST"
                 connectTimeout = 20_000
-                readTimeout = 300_000
+                readTimeout = 45_000
                 doOutput = true
-                setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
+                setRequestProperty("Content-Type", "application/json; charset=utf-8")
                 setRequestProperty("Accept", "application/json")
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
+                setRequestProperty("User-Agent", "Zmusic/1.0 (Android)")
             }
-
-            val responseText: String
+            val jobText: String
             try {
-                apiConnection.outputStream.use { it.write(form.toByteArray(Charsets.UTF_8)) }
-                val status = apiConnection.responseCode
-                val responseStream = if (status in 200..299) apiConnection.inputStream else apiConnection.errorStream
-                responseText = responseStream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
-                if (status !in 200..299) throw IllegalStateException("Conversion service returned HTTP $status")
+                jobConnection.outputStream.use { it.write(jobRequest.toString().toByteArray(Charsets.UTF_8)) }
+                val status = jobConnection.responseCode
+                jobText = readHttpResponse(jobConnection)
+                if (status !in 200..299) {
+                    throw IllegalStateException("Vevioz job request returned HTTP " + status + ": " + responseMessage(jobText))
+                }
             } finally {
-                apiConnection.disconnect()
+                jobConnection.disconnect()
             }
 
-            val json = JSONObject(responseText)
-            if (!json.optBoolean("success", false)) {
-                throw IllegalStateException(json.optString("error").ifBlank { "Conversion failed" })
-            }
-            val downloadUrl = json.optString("downloadUrl")
-            if (downloadUrl.isBlank()) throw IllegalStateException("The API did not return an MP3 download link")
+            var job = JSONObject(jobText)
+            val jobId = findJsonString(job, setOf("job_id", "jobId", "job", "id")).orEmpty()
+            var accessToken = findJsonString(job, setOf("access_token", "accessToken", "token")).orEmpty()
+            var downloadUrl = findJsonString(job, setOf("download_url", "downloadUrl", "file_url", "fileUrl", "download_link", "downloadLink")).orEmpty()
 
-            val rawTitle = json.optString("title", "Zmusic download")
+            val deadline = System.currentTimeMillis() + 5 * 60 * 1000L
+            while (downloadUrl.isBlank() && jobId.isNotBlank() && System.currentTimeMillis() < deadline) {
+                val state = findJsonString(job, setOf("status", "state")).orEmpty().lowercase()
+                if (state in setOf("failed", "error", "cancelled", "canceled")) {
+                    throw IllegalStateException(findJsonString(job, setOf("error", "message", "detail")) ?: "Vevioz conversion failed")
+                }
+                Thread.sleep(1_500)
+                val pollUrl = buildString {
+                    append("https://api.vevioz.com/api/v1/jobs/")
+                    append(URLEncoder.encode(jobId, "UTF-8"))
+                    if (accessToken.isNotBlank()) append("?token=" + URLEncoder.encode(accessToken, "UTF-8"))
+                }
+                val pollConnection = (URL(pollUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = 20_000
+                    readTimeout = 45_000
+                    setRequestProperty("Accept", "application/json")
+                    setRequestProperty("User-Agent", "Zmusic/1.0 (Android)")
+                }
+                val pollText: String
+                try {
+                    val statusCode = pollConnection.responseCode
+                    pollText = readHttpResponse(pollConnection)
+                    if (statusCode !in 200..299) {
+                        throw IllegalStateException("Vevioz job check returned HTTP " + statusCode + ": " + responseMessage(pollText))
+                    }
+                } finally {
+                    pollConnection.disconnect()
+                }
+                job = JSONObject(pollText)
+                val latestToken = findJsonString(job, setOf("access_token", "accessToken", "token"))
+                if (!latestToken.isNullOrBlank()) accessToken = latestToken
+                downloadUrl = findJsonString(job, setOf("download_url", "downloadUrl", "file_url", "fileUrl", "download_link", "downloadLink")).orEmpty()
+            }
+            if (downloadUrl.isBlank()) {
+                throw IllegalStateException(
+                    if (jobId.isBlank()) findJsonString(job, setOf("error", "message", "detail")) ?: "Vevioz did not return a download job ID"
+                    else "MP3 conversion timed out before a download link was ready"
+                )
+            }
+
+            val rawTitle = findJsonString(job, setOf("title", "filename", "file_name", "fileName"))
+                ?: findJsonString(info, setOf("title", "name")) ?: "Zmusic download"
             val safeTitle = rawTitle.replace("\\", "_").replace(Regex("[/:*?\"<>|]"), "_")
                 .trim().trim('.').take(100).ifBlank { "Zmusic download" }
 
-            // Download and validate the response before creating a visible Music file.
-            // Some download hosts return an empty response or an HTML error page with HTTP 200.
+            val resolvedDownloadUrl = URL(URL("https://api.vevioz.com/"), downloadUrl)
+            if (resolvedDownloadUrl.protocol != "https" ||
+                !resolvedDownloadUrl.host.equals("api.vevioz.com", ignoreCase = true) ||
+                !resolvedDownloadUrl.path.startsWith("/api/v1/files/")) {
+                throw IllegalStateException("Vevioz returned an unexpected download URL")
+            }
+
             tempFile = File.createTempFile("zmusic-audio-", ".mp3", context.cacheDir)
-            val downloadConnection = (URL(downloadUrl).openConnection() as HttpURLConnection).apply {
+            val downloadConnection = (resolvedDownloadUrl.openConnection() as HttpURLConnection).apply {
                 requestMethod = "GET"
                 connectTimeout = 20_000
                 readTimeout = 300_000
                 instanceFollowRedirects = true
-                setRequestProperty("Accept", "*/*")
-                setRequestProperty("Accept-Encoding", "identity")
-                setRequestProperty("Accept-Language", "en-US,en;q=0.9")
-                setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
-                setRequestProperty("Origin", "https://ytmp3.ge")
-                setRequestProperty("Referer", "https://ytmp3.ge/en/")
+                setRequestProperty("Accept", "audio/mpeg, application/octet-stream, */*")
+                setRequestProperty("User-Agent", "Zmusic/1.0 (Android)")
             }
 
             var downloadedBytes = 0L
             try {
                 val status = downloadConnection.responseCode
-                if (status !in 200..299) throw IllegalStateException("MP3 download returned HTTP $status")
+                if (status !in 200..299) {
+                    val body = readHttpResponse(downloadConnection)
+                    throw IllegalStateException("MP3 download returned HTTP " + status + ": " + responseMessage(body))
+                }
                 val contentType = downloadConnection.contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
                 if (contentType == "text/html" || contentType == "application/json" || contentType.startsWith("text/")) {
-                    val responsePreview = runCatching {
-                        downloadConnection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText().take(1200) }
-                    }.getOrDefault("")
-                    val readablePreview = responsePreview
-                        .replace(Regex("(?is)<script[^>]*>.*?</script>"), " ")
-                        .replace(Regex("(?is)<style[^>]*>.*?</style>"), " ")
-                        .replace(Regex("<[^>]+>"), " ")
-                        .replace(Regex("\\s+"), " ")
-                        .trim()
-                        .take(220)
-                    val host = runCatching { downloadConnection.url.host }.getOrDefault("unknown host")
-                    throw IllegalStateException(
-                        "Download host $host returned HTML ($contentType). " +
-                            (readablePreview.ifBlank { "The temporary download link may have expired or been rejected." })
-                    )
+                    val body = readHttpResponse(downloadConnection)
+                    throw IllegalStateException("Vevioz returned " + contentType + " instead of audio: " + responseMessage(body))
                 }
                 downloadConnection.inputStream.use { input ->
                     tempFile!!.outputStream().buffered().use { output ->
@@ -391,11 +472,11 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
                 downloadConnection.disconnect()
             }
             if (downloadedBytes <= 0L || tempFile!!.length() <= 0L) {
-                throw IllegalStateException("The conversion service returned an empty MP3. Please try again.")
+                throw IllegalStateException("Vevioz returned an empty MP3. Please try again.")
             }
 
             val values = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, "$safeTitle.mp3")
+                put(MediaStore.MediaColumns.DISPLAY_NAME, safeTitle + ".mp3")
                 put(MediaStore.MediaColumns.MIME_TYPE, "audio/mpeg")
                 put(MediaStore.MediaColumns.RELATIVE_PATH, "Music/Zmusic")
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
@@ -425,17 +506,88 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
             val completed = ContentValues().apply { put(MediaStore.MediaColumns.IS_PENDING, 0) }
             context.contentResolver.update(savedUri!!, completed, null, null)
             mainHandler.post {
-                Toast.makeText(context, "Saved to Music/Zmusic: $safeTitle", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Saved to Music/Zmusic: " + safeTitle, Toast.LENGTH_LONG).show()
                 onSaved()
             }
         } catch (error: Exception) {
             savedUri?.let { uri -> runCatching { context.contentResolver.delete(uri, null, null) } }
             val message = error.localizedMessage?.takeIf { it.isNotBlank() } ?: "Unknown error"
             mainHandler.post {
-                Toast.makeText(context, "Audio extraction failed: $message", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, "Audio extraction failed: " + message, Toast.LENGTH_LONG).show()
             }
         } finally {
             tempFile?.let { runCatching { it.delete() } }
         }
     }.start()
+}
+
+private fun readHttpResponse(connection: HttpURLConnection): String {
+    val stream = if (connection.responseCode in 200..299) connection.inputStream else connection.errorStream
+    return stream?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }.orEmpty()
+}
+
+private fun responseMessage(body: String): String {
+    val cleaned = runCatching {
+        val json = JSONObject(body)
+        findJsonString(json, setOf("error", "message", "detail", "title"))
+    }.getOrNull() ?: body
+    return cleaned.replace(Regex("<[^>]+>"), " ")
+        .replace(Regex("\\s+"), " ")
+        .trim()
+        .take(180)
+        .ifBlank { "No details returned" }
+}
+
+private fun findJsonString(value: Any?, keys: Set<String>): String? {
+    when (value) {
+        is JSONObject -> {
+            val iterator = value.keys()
+            while (iterator.hasNext()) {
+                val key = iterator.next()
+                val child = value.opt(key)
+                if (key in keys && child != null && child != JSONObject.NULL &&
+                    (child is String || child is Number)) {
+                    val text = child.toString().trim()
+                    if (text.isNotBlank()) return text
+                }
+            }
+            val iterator2 = value.keys()
+            while (iterator2.hasNext()) {
+                val found = findJsonString(value.opt(iterator2.next()), keys)
+                if (found != null) return found
+            }
+        }
+        is org.json.JSONArray -> {
+            for (i in 0 until value.length()) {
+                val found = findJsonString(value.opt(i), keys)
+                if (found != null) return found
+            }
+        }
+    }
+    return null
+}
+
+private fun findJsonArray(value: Any?, keys: Set<String>): org.json.JSONArray? {
+    when (value) {
+        is JSONObject -> {
+            val iterator = value.keys()
+            while (iterator.hasNext()) {
+                val key = iterator.next()
+                val child = value.opt(key)
+                if (key in keys && child is org.json.JSONArray) return child
+            }
+            val iterator2 = value.keys()
+            while (iterator2.hasNext()) {
+                val found = findJsonArray(value.opt(iterator2.next()), keys)
+                if (found != null) return found
+            }
+        }
+        is org.json.JSONArray -> {
+            for (i in 0 until value.length()) {
+                val found = findJsonArray(value.opt(i), keys)
+                if (found != null) return found
+            }
+        }
+    }
+    return null
 }
