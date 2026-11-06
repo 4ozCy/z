@@ -81,14 +81,14 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GText("Audio extraction", size = 19.sp, weight = FontWeight.Bold)
-            GText("Extract audio as MP3 with yt-dlp. Requires Termux with yt-dlp and FFmpeg installed.", size = 12.sp, color = Glass.TextLo)
+            GText("Convert a YouTube video to MP3 online. No Termux or FFmpeg setup required.", size = 12.sp, color = Glass.TextLo)
             OutlinedTextField(
                 value = audioUrl,
                 onValueChange = { audioUrl = it },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 textStyle = androidx.compose.ui.text.TextStyle(fontSize = 14.sp),
-                label = { Text("Video or media URL", fontSize = 12.sp) },
+                label = { Text("YouTube video URL", fontSize = 12.sp) },
                 placeholder = { Text("https://...", fontSize = 13.sp) },
             )
             GlassPillButton(
@@ -98,7 +98,7 @@ fun SettingsScreen(
                 tint = Glass.Aqua,
             )
             GText(
-                "Setup in Termux: install yt-dlp and ffmpeg, run termux-setup-storage, and allow external commands in Termux settings. Files are saved to Music. Only download content you have permission to use.",
+                "MP3 files are downloaded to Music/Zmusic. Requires an internet connection. Only download content you have permission to use.",
                 size = 12.sp,
                 color = Glass.TextLo,
                 maxLines = 5,
