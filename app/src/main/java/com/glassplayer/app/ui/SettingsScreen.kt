@@ -51,8 +51,8 @@ fun SettingsScreen(
         ScreenHeader("Options", "Make Zmusic feel like yours")
 
         Column(
-            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(20.dp), strength = 1.1f).padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            Modifier.fillMaxWidth().glassCard(RoundedCornerShape(18.dp), strength = 1.1f).padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             GText("Library", size = 17.sp, weight = FontWeight.Bold)
             GText("$songCount songs on this device", size = 12.sp, color = Glass.TextLo)
