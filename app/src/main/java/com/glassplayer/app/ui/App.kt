@@ -160,23 +160,40 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     pad = pad,
                     onPlay = vm::playQueue,
                 )
-                else -> SettingsScreen(
-                    songCount = songs.size,
-                    sortMode = sortMode,
-                    currentSong = renameTarget,
-                    onSortModeChange = {
-                        sortMode = it
-                        prefs.edit().putInt("sortMode", it).apply()
-                    },
-                    onRefresh = vm::refresh,
-                    onRenameCurrent = onRenameCurrent,
-                    onDeleteCurrent = onDeleteCurrent,
-                    onExtractAudio = onExtractAudio,
+                4 -> {
+                    if (current != null) {
+                        NowPlaying(
+                            song = current,
+                            ui = ui,
+                            position = positionState,
+                            accent = accent,
+                            onClose = { tab = 0 },
+                            onTogglePlay = vm::togglePlay,
+                            onPrevious = vm::previous,
+                            onNext = vm::next,
+                            onSeek = vm::seekTo,
+                            onShuffle = vm::toggleShuffle,
+                            onRepeat = vm::cycleRepeat,
+                        )
+                    } else {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            EmptyNote("Nothing playing", "Choose a song from your library to open the player.")
+                        }
+                    }
+                }
+                else -> SongsScreen(
+                    songs = songs,
+                    loaded = loaded,
+                    ui = ui,
+                    accent = accent,
+                    state = songsList,
                     pad = pad,
+                    onPlay = vm::playQueue,
+                    onShuffle = vm::playShuffled,
                 )
         }
 
-        Dock(
+        if (tab != 4 || current == null) Dock(
             tab = tab,
             onTab = { tab = it },
             current = current,
@@ -185,7 +202,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             accent = accent,
             onTogglePlay = vm::togglePlay,
             onNext = vm::next,
-            onOpenPlayer = {},
+            onOpenPlayer = { if (current != null) tab = 4 },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },

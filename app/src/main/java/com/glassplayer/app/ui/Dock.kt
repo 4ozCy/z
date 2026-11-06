@@ -24,7 +24,7 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -58,7 +58,7 @@ private val NavTabs = listOf(
     NavTab("Albums", Icons.Rounded.Album),
     NavTab("Artists", Icons.Rounded.Person),
     NavTab("Search", Icons.Rounded.Search),
-    NavTab("Options", Icons.Rounded.Settings),
+    NavTab("Player", Icons.Rounded.PlayArrow),
 )
 
 /** Floating bottom control: a mini player that docks above a pill of tabs, both made of live glass. */
