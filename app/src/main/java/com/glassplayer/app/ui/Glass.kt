@@ -128,14 +128,14 @@ fun GlassPillButton(
 ) {
     Row(
         modifier
-            .height(38.dp)
+            .height(44.dp)
             .glassCard(CircleShape, tint, 1.3f)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp),
+            .padding(horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Icon(icon, contentDescription = null, tint = Glass.TextHi, modifier = Modifier.size(17.dp))
-        GText(text, size = 13.sp, weight = FontWeight.SemiBold)
+        Icon(icon, contentDescription = null, tint = Glass.TextHi, modifier = Modifier.size(20.dp))
+        GText(text, size = 15.sp, weight = FontWeight.SemiBold)
     }
 }
