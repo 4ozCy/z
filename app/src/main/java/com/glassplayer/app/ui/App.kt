@@ -12,7 +12,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
@@ -31,8 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.glassplayer.app.PlayerViewModel
 import com.glassplayer.app.data.Song
@@ -79,6 +87,18 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val albumsGrid = rememberLazyGridState()
     val accent = Glass.Aqua
 
+    val density = LocalDensity.current
+    var dockHeight by remember { mutableStateOf(0.dp) }
+    val topInset: Dp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val pad = remember(topInset, dockHeight) {
+        PaddingValues(
+            start = 18.dp,
+            end = 18.dp,
+            top = topInset + 14.dp,
+            bottom = dockHeight + 28.dp,
+        )
+    }
+
     val onRenameCurrent: () -> Unit = {
         renameTarget?.let { song ->
             renameDraft = song.title
@@ -111,7 +131,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 group = detail!!,
                 ui = ui,
                 accent = accent,
-                pad = PaddingValues(bottom = 120.dp),
+                pad = pad,
                 round = detailIsArtist,
                 onBack = { detail = null },
                 onPlay = vm::playQueue,
@@ -125,14 +145,14 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     ui = ui,
                     accent = accent,
                     state = songsList,
-                    pad = PaddingValues(bottom = 120.dp),
+                    pad = pad,
                     onPlay = vm::playQueue,
                     onShuffle = vm::playShuffled,
                 )
                 1 -> AlbumsScreen(
                     albums = albums,
                     state = albumsGrid,
-                    pad = PaddingValues(bottom = 120.dp),
+                    pad = pad,
                     onOpen = { group ->
                         detailIsArtist = false
                         detail = group
@@ -141,7 +161,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 2 -> ArtistsScreen(
                     artists = artists,
                     state = songsList,
-                    pad = PaddingValues(bottom = 120.dp),
+                    pad = pad,
                     onOpen = { group ->
                         detailIsArtist = true
                         detail = group
@@ -151,7 +171,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     songs = songs,
                     ui = ui,
                     accent = accent,
-                    pad = PaddingValues(bottom = 120.dp),
+                    pad = pad,
                     onPlay = vm::playQueue,
                 )
                 else -> SettingsScreen(
@@ -166,7 +186,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     onRenameCurrent = onRenameCurrent,
                     onDeleteCurrent = onDeleteCurrent,
                     onExtractAudio = onExtractAudio,
-                    pad = PaddingValues(bottom = 120.dp),
+                    pad = pad,
                 )
             }
         }
@@ -181,7 +201,9 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             onTogglePlay = vm::togglePlay,
             onNext = vm::next,
             onOpenPlayer = { if (current != null) detail = SongGroup(current.title, current.artist, listOf(current)) },
-            modifier = Modifier.align(Alignment.BottomCenter),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },
         )
 
         if (!loaded && songs.isEmpty() && !hasAudioPermission(context)) {
