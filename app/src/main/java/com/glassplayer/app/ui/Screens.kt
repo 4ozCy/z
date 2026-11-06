@@ -30,7 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.PlayArrow
@@ -349,58 +348,6 @@ fun SearchScreen(
         }
         itemsIndexed(results, key = { _, s -> s.id }) { i, s ->
             SongRow(s, s.id == ui.currentId, ui.isPlaying, accent) { onPlay(results, i) }
-        }
-    }
-}
-
-@Composable
-fun DetailScreen(
-    group: SongGroup,
-    ui: PlaybackUi,
-    accent: Color,
-    pad: PaddingValues,
-    round: Boolean,
-    onBack: () -> Unit,
-    onPlay: (List<Song>, Int) -> Unit,
-    onShuffle: (List<Song>) -> Unit,
-) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Glass.Ink.copy(alpha = 0.86f), Glass.Ink.copy(alpha = 0.95f))))
-    ) {
-        LazyColumn(
-            Modifier.fillMaxSize(),
-            contentPadding = pad,
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            item {
-                Column(Modifier.fillMaxWidth().padding(bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    GlassIconButton(Icons.Rounded.ArrowBack, "Back", onBack, size = 44.dp)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
-                        Artwork(
-                            group.songs.first(),
-                            Modifier.size(132.dp),
-                            if (round) CircleShape else RoundedCornerShape(28.dp),
-                        )
-                        Column(Modifier.weight(1f)) {
-                            GText(group.title, size = 26.sp, weight = FontWeight.ExtraBold, maxLines = 3, tracking = (-0.6).sp)
-                            GText(
-                                if (round) group.subtitle else "${group.subtitle}, ${songCount(group.songs.size)}",
-                                size = 14.sp, color = Glass.TextLo, maxLines = 2,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                        }
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        GlassPillButton("Play", Icons.Rounded.PlayArrow, { onPlay(group.songs, 0) }, tint = accent)
-                        GlassPillButton("Shuffle", Icons.Rounded.Shuffle, { onShuffle(group.songs) })
-                    }
-                }
-            }
-            itemsIndexed(group.songs, key = { _, s -> s.id }) { i, s ->
-                SongRow(s, s.id == ui.currentId, ui.isPlaying, accent) { onPlay(group.songs, i) }
-            }
         }
     }
 }

@@ -63,8 +63,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val prefs = remember(context) { context.getSharedPreferences("zmusic_prefs", Context.MODE_PRIVATE) }
 
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    var detail by remember { mutableStateOf<SongGroup?>(null) }
-    var detailIsArtist by remember { mutableStateOf(false) }
     var sortMode by rememberSaveable { mutableIntStateOf(prefs.getInt("sortMode", 0)) }
     var renameDraft by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
@@ -132,19 +130,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 )
             )
     ) {
-        if (detail != null) {
-            DetailScreen(
-                group = detail!!,
-                ui = ui,
-                accent = accent,
-                pad = pad,
-                round = detailIsArtist,
-                onBack = { detail = null },
-                onPlay = vm::playQueue,
-                onShuffle = vm::playShuffled,
-            )
-        } else {
-            when (tab) {
+        when (tab) {
                 0 -> SongsScreen(
                     songs = songs,
                     loaded = loaded,
@@ -159,19 +145,13 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     albums = albums,
                     state = albumsGrid,
                     pad = pad,
-                    onOpen = { group ->
-                        detailIsArtist = false
-                        detail = group
-                    },
+                    onOpen = { group -> vm.playQueue(group.songs, 0) },
                 )
                 2 -> ArtistsScreen(
                     artists = artists,
                     state = songsList,
                     pad = pad,
-                    onOpen = { group ->
-                        detailIsArtist = true
-                        detail = group
-                    },
+                    onOpen = { group -> vm.playQueue(group.songs, 0) },
                 )
                 3 -> SearchScreen(
                     songs = songs,
@@ -206,7 +186,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             accent = accent,
             onTogglePlay = vm::togglePlay,
             onNext = vm::next,
-            onOpenPlayer = { if (current != null) detail = SongGroup(current.title, current.artist, listOf(current)) },
+            onOpenPlayer = {},
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },
