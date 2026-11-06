@@ -91,9 +91,9 @@ fun ScreenHeader(
     modifier: Modifier = Modifier,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    Column(modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+    Column(modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         GText(title, size = 36.sp, weight = FontWeight.ExtraBold, tracking = (-1).sp)
-        GText(subtitle, size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
+        GText(subtitle, size = 14.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
         if (actions != null) {
             Row(
                 Modifier.padding(top = 14.dp),
@@ -134,7 +134,7 @@ fun SongRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Artwork(song, Modifier.size(52.dp), RoundedCornerShape(12.dp))
+        Artwork(song, Modifier.size(52.dp), RoundedCornerShape(14.dp))
         Column(Modifier.weight(1f)) {
             GText(
                 song.title,
@@ -163,11 +163,11 @@ fun PermissionScreen(onGrant: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.Rounded.LibraryMusic, null, tint = Glass.Aqua, modifier = Modifier.size(36.dp))
-            GText("Your music, on this phone", size = 20.sp, weight = FontWeight.Bold, align = TextAlign.Center, maxLines = 2, tracking = (-0.4).sp)
+            Icon(Icons.Rounded.LibraryMusic, null, tint = Glass.Aqua, modifier = Modifier.size(44.dp))
+            GText("Your music, on this phone", size = 24.sp, weight = FontWeight.Bold, align = TextAlign.Center, maxLines = 2, tracking = (-0.4).sp)
             GText(
                 "Zmusic reads the audio files stored on your device to build your library. Nothing is uploaded.",
-                size = 13.sp, color = Glass.TextLo, maxLines = 4, align = TextAlign.Center,
+                size = 15.sp, color = Glass.TextLo, maxLines = 4, align = TextAlign.Center,
             )
             Spacer(Modifier.height(6.dp))
             GlassPillButton("Allow music access", Icons.Rounded.PlayArrow, onGrant, tint = Glass.Aqua)
@@ -242,8 +242,8 @@ fun AlbumsScreen(
                     .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1f), RoundedCornerShape(14.dp))
-                GText(album.title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp, start = 2.dp))
+                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1f), RoundedCornerShape(18.dp))
+                GText(album.title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 8.dp, start = 2.dp))
                 GText(album.subtitle, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             }
         }
@@ -271,7 +271,7 @@ fun ArtistsScreen(
                     .clickable { onOpen(artist) }
                     .padding(horizontal = 8.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 Artwork(artist.songs.first(), Modifier.size(56.dp), CircleShape)
                 Column(Modifier.weight(1f)) {
@@ -376,7 +376,7 @@ fun DetailScreen(
         ) {
             item {
                 Column(Modifier.fillMaxWidth().padding(bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    GlassIconButton(Icons.Rounded.ArrowBack, "Back", onBack, size = 40.dp)
+                    GlassIconButton(Icons.Rounded.ArrowBack, "Back", onBack, size = 44.dp)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                         Artwork(
                             group.songs.first(),

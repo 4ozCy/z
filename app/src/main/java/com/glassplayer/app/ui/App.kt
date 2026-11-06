@@ -125,14 +125,14 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     ui = ui,
                     accent = accent,
                     state = songsList,
-                    pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                    pad = PaddingValues(bottom = 120.dp),
                     onPlay = vm::playQueue,
                     onShuffle = vm::playShuffled,
                 )
                 1 -> AlbumsScreen(
                     albums = albums,
                     state = albumsGrid,
-                    pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                    pad = PaddingValues(bottom = 120.dp),
                     onOpen = { group ->
                         detailIsArtist = false
                         detail = group
@@ -141,7 +141,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 2 -> ArtistsScreen(
                     artists = artists,
                     state = songsList,
-                    pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                    pad = PaddingValues(bottom = 120.dp),
                     onOpen = { group ->
                         detailIsArtist = true
                         detail = group
@@ -151,7 +151,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     songs = songs,
                     ui = ui,
                     accent = accent,
-                    pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                    pad = PaddingValues(bottom = 120.dp),
                     onPlay = vm::playQueue,
                 )
                 else -> SettingsScreen(
@@ -166,7 +166,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     onRenameCurrent = onRenameCurrent,
                     onDeleteCurrent = onDeleteCurrent,
                     onExtractAudio = onExtractAudio,
-                    pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                    pad = PaddingValues(bottom = 120.dp),
                 )
             }
         }
