@@ -174,7 +174,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     onExtractAudio = onExtractAudio,
                     pad = pad,
                 )
-            }
         }
 
         Dock(
