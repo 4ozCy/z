@@ -33,6 +33,7 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Equalizer
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.QueueMusic
+import androidx.compose.material.icons.rounded.Speed
 import androidx.compose.material.icons.rounded.Timer
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Pause
@@ -42,7 +43,10 @@ import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -95,6 +99,7 @@ fun NowPlaying(
     wallpaperUri: Uri? = null,
 ) {
     var showSleepTimer by remember { mutableStateOf(false) }
+    var showSpeedMenu by remember { mutableStateOf(false) }
     val glow by animateColorAsState(accent, tween(700), label = "nowPlayingAccent")
 
     Box(Modifier.fillMaxSize()) {
@@ -126,14 +131,6 @@ fun NowPlaying(
                         Icons.Rounded.Equalizer, "Sound Studio", onOpenEqualizer,
                         size = 36.dp, iconSize = 19.dp, filled = false,
                     )
-                    GlassIconButton(
-                        if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
-                        if (isFavorite) "Remove from liked songs" else "Add to liked songs",
-                        onToggleFavorite,
-                        size = 36.dp,
-                        iconSize = 19.dp,
-                        tint = if (isFavorite) Glass.Coral else Glass.TextLo,
-                    )
                 }
             }
 
@@ -141,57 +138,76 @@ fun NowPlaying(
                 Modifier.weight(1f).fillMaxWidth().padding(vertical = 18.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                val side = minOf(maxWidth, maxHeight)
-                val scale by animateFloatAsState(
-                    if (ui.isPlaying) 1f else 0.88f,
-                    spring(dampingRatio = 0.5f, stiffness = 260f),
-                    label = "artScale",
-                )
-                val shape = RoundedCornerShape(18.dp)
+                val side = minOf(maxWidth, maxHeight, 320.dp)
+                val shape = RoundedCornerShape(16.dp)
                 Box(
                     Modifier
                         .size(side)
-                        .graphicsLayer { scaleX = scale; scaleY = scale }
-                        .border(1.dp, Color.White.copy(alpha = 0.12f), shape),
+                        .border(1.dp, Color.White.copy(alpha = 0.10f), shape),
                 ) {
                     Artwork(song, Modifier.fillMaxSize(), shape)
                 }
             }
 
-            GText(song.title, size = 24.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.6).sp)
-            GText(song.artist, size = 15.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 4.dp))
-
             Row(
-                Modifier.fillMaxWidth().padding(top = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                Modifier.fillMaxWidth().padding(top = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                listOf(0.75f, 1f, 1.25f, 1.5f, 2f).forEach { speed ->
-                    val selectedSpeed = kotlin.math.abs(playbackSpeed - speed) < 0.03f
-                    Box(
-                        Modifier.weight(1f).height(30.dp)
-                            .glassCard(RoundedCornerShape(10.dp), if (selectedSpeed) glow else Color.White, if (selectedSpeed) 0.9f else 0.45f)
-                            .clickable { onSetPlaybackSpeed(speed) },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        GText(
-                            if (speed == 1f) "1×" else speed.toString().removeSuffix(".0") + "×",
-                            size = 12.sp,
-                            weight = if (selectedSpeed) FontWeight.Bold else FontWeight.Medium,
-                            color = if (selectedSpeed) Glass.TextHi else Glass.TextLo,
-                        )
-                    }
+                Column(Modifier.weight(1f)) {
+                    GText(song.title, size = 22.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.35).sp)
+                    GText(song.artist, size = 14.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 3.dp))
                 }
+                GlassIconButton(
+                    if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
+                    if (isFavorite) "Remove from liked songs" else "Add to liked songs",
+                    onToggleFavorite,
+                    size = 42.dp,
+                    iconSize = 22.dp,
+                    tint = if (isFavorite) Glass.Aqua else Glass.TextLo,
+                    filled = false,
+                )
             }
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 5.dp),
+                Modifier.fillMaxWidth().padding(top = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Box {
+                    GlassPillButton(
+                        if (kotlin.math.abs(playbackSpeed - 1f) < 0.03f) "Speed · Normal"
+                        else "Speed · " + playbackSpeed.toString().removeSuffix(".0") + "×",
+                        Icons.Rounded.Speed,
+                        { showSpeedMenu = true },
+                        tint = if (kotlin.math.abs(playbackSpeed - 1f) < 0.03f) Glass.TextLo else Glass.Aqua,
+                    )
+                    DropdownMenu(
+                        expanded = showSpeedMenu,
+                        onDismissRequest = { showSpeedMenu = false },
+                    ) {
+                        listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f).forEach { speed ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        if (speed == 1f) "Normal · 1.0×"
+                                        else speed.toString().removeSuffix(".0") + "×",
+                                    )
+                                },
+                                onClick = {
+                                    onSetPlaybackSpeed(speed)
+                                    showSpeedMenu = false
+                                },
+                            )
+                        }
+                    }
+                }
                 GlassPillButton(
-                    if (sleepTimerRemainingMs > 0L) "Sleep · " + formatSleepCountdown(sleepTimerRemainingMs) else "Sleep timer",
+                    if (sleepTimerRemainingMs > 0L) "Sleep · " + formatSleepCountdown(sleepTimerRemainingMs)
+                    else "Sleep timer",
                     Icons.Rounded.Timer,
                     { showSleepTimer = true },
-                    tint = if (sleepTimerRemainingMs > 0L) glow else Glass.TextLo,
+                    tint = if (sleepTimerRemainingMs > 0L) Glass.Aqua else Glass.TextLo,
                 )
             }
 
@@ -214,7 +230,7 @@ fun NowPlaying(
                 BigPlayButton(ui.isPlaying, glow, onTogglePlay)
                 GlassIconButton(
                     Icons.Rounded.SkipNext, "Next song", onNext,
-                    size = 60.dp, iconSize = 36.dp, filled = false,
+                    size = 54.dp, iconSize = 32.dp, filled = false,
                 )
                 GlassIconButton(
                     if (ui.repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
@@ -316,9 +332,10 @@ private fun BigPlayButton(playing: Boolean, accent: Color, onClick: () -> Unit) 
     )
     Box(
         Modifier
-            .size(76.dp)
+            .size(68.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .glassCard(CircleShape, accent, 2.2f)
+            .background(Glass.TextHi, CircleShape)
+            .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
             .clickable(interactionSource = source, indication = null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -326,8 +343,8 @@ private fun BigPlayButton(playing: Boolean, accent: Color, onClick: () -> Unit) 
             Icon(
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 contentDescription = if (isPlaying) "Pause" else "Play",
-                tint = Glass.TextHi,
-                modifier = Modifier.size(38.dp),
+                tint = Glass.Ink,
+                modifier = Modifier.size(34.dp),
             )
         }
     }
@@ -364,17 +381,17 @@ fun GlassSeekBar(progress: Float, accent: Color, onSeek: (Float) -> Unit, modifi
                 )
             },
     ) {
-        val trackH = 8.dp.toPx()
+        val trackH = (if (dragging) 6.dp else 4.dp).toPx()
         val cy = size.height / 2f
         val top = cy - trackH / 2f
         drawRoundRect(Color.White.copy(alpha = 0.14f), Offset(0f, top), Size(size.width, trackH), CornerRadius(trackH / 2f))
         drawRoundRect(
-            brush = Brush.horizontalGradient(listOf(accent, Color.White)),
+            color = accent,
             topLeft = Offset(0f, top),
             size = Size((size.width * shown).coerceAtLeast(trackH), trackH),
             cornerRadius = CornerRadius(trackH / 2f),
         )
-        val r = (if (dragging) 13.dp else 10.dp).toPx()
+        val r = (if (dragging) 10.dp else 7.dp).toPx()
         val cx = (size.width * shown).coerceIn(r, size.width - r)
         drawCircle(Color.White.copy(alpha = 0.96f), r, Offset(cx, cy))
         drawCircle(accent.copy(alpha = 0.6f), r * 0.55f, Offset(cx, cy))
