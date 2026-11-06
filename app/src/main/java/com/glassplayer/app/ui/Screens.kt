@@ -92,11 +92,11 @@ fun ScreenHeader(
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     Column(modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-        GText(title, size = 28.sp, weight = FontWeight.ExtraBold, tracking = (-1).sp)
-        GText(subtitle, size = 14.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
+        GText(title, size = 24.sp, weight = FontWeight.ExtraBold, tracking = (-1).sp)
+        GText(subtitle, size = 12.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
         if (actions != null) {
             Row(
-                Modifier.padding(top = 10.dp),
+                Modifier.padding(top = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) { actions() }
@@ -134,20 +134,20 @@ fun SongRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Artwork(song, Modifier.size(44.dp), RoundedCornerShape(12.dp))
+        Artwork(song, Modifier.size(40.dp), RoundedCornerShape(12.dp))
         Column(Modifier.weight(1f)) {
             GText(
                 song.title,
-                size = 14.sp,
+                size = 13.sp,
                 weight = FontWeight.SemiBold,
                 color = if (active) accent else Glass.TextHi,
             )
-            GText(song.artist, size = 11.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 1.dp))
+            GText(song.artist, size = 10.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 1.dp))
         }
         if (active && playing) {
             EqBars(accent, Modifier.padding(end = 6.dp))
         } else {
-            GText(formatTime(song.durationMs), size = 11.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 6.dp))
+            GText(formatTime(song.durationMs), size = 10.sp, color = Glass.TextLo, modifier = Modifier.padding(end = 6.dp))
         }
     }
 }
@@ -226,25 +226,25 @@ fun AlbumsScreen(
         modifier = Modifier.fillMaxSize(),
         state = state,
         contentPadding = pad,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             ScreenHeader("Albums", "${albums.size} in your library")
         }
         items(albums, key = { it.songs.first().id }) { album ->
-            val shape = RoundedCornerShape(26.dp)
+            val shape = RoundedCornerShape(20.dp)
             Column(
                 Modifier
                     .fillMaxWidth()
                     .glassCard(shape)
                     .clickable { onOpen(album) }
-                    .padding(10.dp),
+                    .padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1f), RoundedCornerShape(18.dp))
-                GText(album.title, size = 15.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp, start = 2.dp))
-                GText(album.subtitle, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
+                Artwork(album.songs.first(), Modifier.fillMaxWidth().aspectRatio(1.2f), RoundedCornerShape(14.dp))
+                GText(album.title, size = 13.sp, weight = FontWeight.SemiBold, modifier = Modifier.padding(top = 6.dp, start = 2.dp))
+                GText(album.subtitle, size = 11.sp, color = Glass.TextLo, modifier = Modifier.padding(start = 2.dp, bottom = 2.dp))
             }
         }
     }
@@ -269,14 +269,14 @@ fun ArtistsScreen(
                 Modifier
                     .fillMaxWidth()
                     .clickable { onOpen(artist) }
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Artwork(artist.songs.first(), Modifier.size(44.dp), CircleShape)
+                Artwork(artist.songs.first(), Modifier.size(40.dp), CircleShape)
                 Column(Modifier.weight(1f)) {
-                    GText(artist.title, size = 14.sp, weight = FontWeight.SemiBold)
-                    GText(artist.subtitle, size = 11.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
+                    GText(artist.title, size = 13.sp, weight = FontWeight.SemiBold)
+                    GText(artist.subtitle, size = 10.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
                 }
             }
         }
@@ -313,22 +313,22 @@ fun SearchScreen(
                 onValueChange = { query = it },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = TextStyle(color = Glass.TextHi, fontSize = 15.sp),
+                textStyle = TextStyle(color = Glass.TextHi, fontSize = 14.sp),
                 cursorBrush = SolidColor(accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 decorationBox = { inner ->
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(42.dp)
                             .glassCard(CircleShape, strength = 1.2f)
-                            .padding(horizontal = 18.dp),
+                            .padding(horizontal = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Icon(Icons.Rounded.Search, null, tint = Glass.TextLo)
                         Box(Modifier.weight(1f)) {
-                            if (query.isEmpty()) GText("Search your music", size = 15.sp, color = Glass.TextLo)
+                            if (query.isEmpty()) GText("Search your music", size = 14.sp, color = Glass.TextLo)
                             inner()
                         }
                         if (query.isNotEmpty()) {
@@ -380,14 +380,14 @@ fun DetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                         Artwork(
                             group.songs.first(),
-                            Modifier.size(104.dp),
+                            Modifier.size(88.dp),
                             if (round) CircleShape else RoundedCornerShape(28.dp),
                         )
                         Column(Modifier.weight(1f)) {
-                            GText(group.title, size = 22.sp, weight = FontWeight.ExtraBold, maxLines = 3, tracking = (-0.6).sp)
+                            GText(group.title, size = 20.sp, weight = FontWeight.ExtraBold, maxLines = 3, tracking = (-0.6).sp)
                             GText(
                                 if (round) group.subtitle else "${group.subtitle}, ${songCount(group.songs.size)}",
-                                size = 12.sp, color = Glass.TextLo, maxLines = 2,
+                                size = 11.sp, color = Glass.TextLo, maxLines = 2,
                                 modifier = Modifier.padding(top = 4.dp),
                             )
                         }
