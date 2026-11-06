@@ -111,7 +111,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 group = detail!!,
                 ui = ui,
                 accent = accent,
-                pad = PaddingValues(top = 28.dp, bottom = 100.dp),
+                pad = PaddingValues(bottom = 120.dp),
                 round = detailIsArtist,
                 onBack = { detail = null },
                 onPlay = vm::playQueue,
