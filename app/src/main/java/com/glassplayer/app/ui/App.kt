@@ -344,10 +344,12 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
                 connectTimeout = 20_000
                 readTimeout = 300_000
                 instanceFollowRedirects = true
-                setRequestProperty("Accept", "audio/mpeg, application/octet-stream, */*")
+                setRequestProperty("Accept", "*/*")
                 setRequestProperty("Accept-Encoding", "identity")
+                setRequestProperty("Accept-Language", "en-US,en;q=0.9")
                 setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0.0.0 Mobile Safari/537.36")
-                setRequestProperty("Referer", "https://ytmp3.ge/")
+                setRequestProperty("Origin", "https://ytmp3.ge")
+                setRequestProperty("Referer", "https://ytmp3.ge/en/")
             }
 
             var downloadedBytes = 0L
@@ -356,7 +358,21 @@ private fun requestAudioExtraction(context: Context, url: String, onSaved: () ->
                 if (status !in 200..299) throw IllegalStateException("MP3 download returned HTTP $status")
                 val contentType = downloadConnection.contentType?.substringBefore(';')?.trim()?.lowercase().orEmpty()
                 if (contentType == "text/html" || contentType == "application/json" || contentType.startsWith("text/")) {
-                    throw IllegalStateException("The download server returned an error page instead of an MP3")
+                    val responsePreview = runCatching {
+                        downloadConnection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText().take(1200) }
+                    }.getOrDefault("")
+                    val readablePreview = responsePreview
+                        .replace(Regex("(?is)<script[^>]*>.*?</script>"), " ")
+                        .replace(Regex("(?is)<style[^>]*>.*?</style>"), " ")
+                        .replace(Regex("<[^>]+>"), " ")
+                        .replace(Regex("\\s+"), " ")
+                        .trim()
+                        .take(220)
+                    val host = runCatching { downloadConnection.url.host }.getOrDefault("unknown host")
+                    throw IllegalStateException(
+                        "Download host $host returned HTML ($contentType). " +
+                            (readablePreview.ifBlank { "The temporary download link may have expired or been rejected." })
+                    )
                 }
                 downloadConnection.inputStream.use { input ->
                     tempFile!!.outputStream().buffered().use { output ->
