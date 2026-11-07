@@ -248,10 +248,10 @@ fun HomeScreen(
                     Modifier
                         .size(34.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFFC3A5FF), Color(0xFF7557D8)))),
+                        .background(Brush.linearGradient(listOf(Color(0xFFA4C9AD), Color(0xFF52795B)))),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF100D1A), modifier = Modifier.size(23.dp))
+                    Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF0E110F), modifier = Modifier.size(23.dp))
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                     GText("Zmusic", size = 21.sp, weight = FontWeight.Bold, tracking = (-0.45).sp)
@@ -271,15 +271,15 @@ fun HomeScreen(
                 if (featuredSong != null) {
                     Artwork(featuredSong, Modifier.fillMaxSize(), RoundedCornerShape(15.dp))
                 } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFF201A32)))
+                    Box(Modifier.fillMaxSize().background(Color(0xFF212624)))
                 }
                 Box(
                     Modifier.fillMaxSize().background(
                         Brush.verticalGradient(
                             listOf(
-                                Color(0xFF100D1A).copy(alpha = 0.05f),
-                                Color(0xFF100D1A).copy(alpha = 0.35f),
-                                Color(0xFF080910).copy(alpha = 0.96f),
+                                Color(0xFF0E110F).copy(alpha = 0.05f),
+                                Color(0xFF0E110F).copy(alpha = 0.35f),
+                                Color(0xFF0A0D0B).copy(alpha = 0.96f),
                             )
                         )
                     )
@@ -291,7 +291,7 @@ fun HomeScreen(
                         .padding(start = 15.dp, end = 15.dp, top = 12.dp, bottom = 14.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
-                    GText("YOUR MUSIC, RIGHT NOW", size = 9.sp, weight = FontWeight.Bold, color = Color(0xFFD0B9FF), tracking = 1.2.sp)
+                    GText("YOUR MUSIC, RIGHT NOW", size = 9.sp, weight = FontWeight.Bold, color = Color(0xFFBBD8C0), tracking = 1.2.sp)
                     Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             GText(greeting, size = 20.sp, weight = FontWeight.SemiBold, maxLines = 1)
@@ -306,7 +306,7 @@ fun HomeScreen(
                             Modifier
                                 .size(42.dp)
                                 .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Color(0xFFC8A5FF), Color(0xFF8854DF))))
+                                .background(Brush.linearGradient(listOf(Color(0xFFA4C9AD), Color(0xFF5D8B69))))
                                 .clickable {
                                     if (featuredSong != null) {
                                         val index = songs.indexOfFirst { it.id == featuredSong.id }
@@ -326,10 +326,10 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 GText("Quick access", size = 17.sp, weight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HomeQuickAction("Liked", Icons.Rounded.Favorite, Color(0xFFE99CBF), Modifier.weight(1f), onOpenLiked)
-                    HomeQuickAction("Albums", Icons.Rounded.Album, Color(0xFFA99AFF), Modifier.weight(1f), onOpenAlbums)
-                    HomeQuickAction("Artists", Icons.Rounded.Person, Color(0xFF8BAEFF), Modifier.weight(1f), onOpenArtists)
-                    HomeQuickAction("Equalizer", Icons.Rounded.GraphicEq, Color(0xFFC9A3FF), Modifier.weight(1f), onOpenEqualizer)
+                    HomeQuickAction("Liked", Icons.Rounded.Favorite, Color(0xFFC98B70), Modifier.weight(1f), onOpenLiked)
+                    HomeQuickAction("Albums", Icons.Rounded.Album, Color(0xFFA4C9AD), Modifier.weight(1f), onOpenAlbums)
+                    HomeQuickAction("Artists", Icons.Rounded.Person, Color(0xFF86B9B0), Modifier.weight(1f), onOpenArtists)
+                    HomeQuickAction("Equalizer", Icons.Rounded.GraphicEq, Color(0xFFA4C9AD), Modifier.weight(1f), onOpenEqualizer)
                 }
             }
         }
@@ -349,7 +349,7 @@ fun HomeScreen(
                             color = Glass.TextLo,
                         )
                     }
-                    GText("See all", size = 12.sp, color = Color(0xFFC0ABFF), modifier = Modifier.clickable(onClick = onOpenSongs))
+                    GText("See all", size = 12.sp, color = Color(0xFFA4C9AD), modifier = Modifier.clickable(onClick = onOpenSongs))
                 }
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(recentlyShown, key = { it.id }) { song ->
@@ -387,9 +387,9 @@ fun HomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 GText("Your library", size = 17.sp, weight = FontWeight.SemiBold)
-                HomeLibraryRow("Songs", "${songs.size} tracks", Icons.Rounded.MusicNote, Color(0xFFC49EFF), onOpenSongs)
-                HomeLibraryRow("Albums", "$albumCount albums", Icons.Rounded.Album, Color(0xFF9FA6FF), onOpenAlbums)
-                HomeLibraryRow("Artists", "$artistCount artists", Icons.Rounded.Person, Color(0xFF8BAEFF), onOpenArtists)
+                HomeLibraryRow("Songs", "${songs.size} tracks", Icons.Rounded.MusicNote, Color(0xFFA4C9AD), onOpenSongs)
+                HomeLibraryRow("Albums", "$albumCount albums", Icons.Rounded.Album, Color(0xFF86B9B0), onOpenAlbums)
+                HomeLibraryRow("Artists", "$artistCount artists", Icons.Rounded.Person, Color(0xFF86B9B0), onOpenArtists)
             }
         }
     }
@@ -407,7 +407,7 @@ private fun HomeQuickAction(
         modifier
             .height(68.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF171924))
+            .background(Color(0xFF171C19))
             .clickable(onClick = onClick)
             .padding(horizontal = 5.dp, vertical = 9.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -430,7 +430,7 @@ private fun HomeLibraryRow(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF171924))
+            .background(Color(0xFF171C19))
             .clickable(onClick = onClick)
             .padding(horizontal = 9.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -517,7 +517,7 @@ fun SongsScreen(
                 Modifier
                     .fillMaxWidth()
                     .clip(CircleShape)
-                    .background(Color(0xFF171824))
+                    .background(Color(0xFF171C19))
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
@@ -551,7 +551,7 @@ fun SongsScreen(
                                 .fillMaxWidth()
                                 .height(42.dp)
                                 .clip(RoundedCornerShape(11.dp))
-                                .background(Color(0xFF171824))
+                                .background(Color(0xFF171C19))
                                 .padding(horizontal = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -576,7 +576,7 @@ fun SongsScreen(
                     .fillMaxWidth()
                     .padding(vertical = 10.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF8554C9), Color(0xFF4B3C87))))
+                    .background(Brush.linearGradient(listOf(Color(0xFF5D8B69), Color(0xFF2E4635))))
                     .clickable { if (visibleSongs.isNotEmpty()) onShuffle(visibleSongs) }
                     .padding(horizontal = 14.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -632,7 +632,7 @@ private fun LibraryFilter(
         modifier
             .height(32.dp)
             .clip(CircleShape)
-            .background(if (selected) Brush.linearGradient(listOf(Color(0xFF8054B8), Color(0xFF4D3B82))) else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent)))
+            .background(if (selected) Brush.linearGradient(listOf(Color(0xFF52795B), Color(0xFF2E4635))) else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent)))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -655,7 +655,7 @@ private fun LibraryTrackRow(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(9.dp))
-            .background(if (active) Color(0xFF1B1A2D) else Color.Transparent)
+            .background(if (active) Color(0xFF1E2721) else Color.Transparent)
             .clickable(onClick = onPlay)
             .padding(horizontal = 4.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -663,7 +663,7 @@ private fun LibraryTrackRow(
     ) {
         Artwork(song, Modifier.size(42.dp), RoundedCornerShape(7.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            GText(song.title, size = 13.sp, weight = if (active) FontWeight.SemiBold else FontWeight.Medium, color = if (active) Color(0xFFD2B8FF) else Glass.TextHi)
+            GText(song.title, size = 13.sp, weight = if (active) FontWeight.SemiBold else FontWeight.Medium, color = if (active) Color(0xFFC3DDC7) else Glass.TextHi)
             GText(song.artist, size = 11.sp, color = Glass.TextLo)
         }
         if (active && playing) {
