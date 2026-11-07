@@ -248,75 +248,70 @@ fun HomeScreen(
                     Modifier
                         .size(34.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Brush.linearGradient(listOf(Color(0xFFA4C9AD), Color(0xFF52795B)))),
+                        .background(Brush.linearGradient(listOf(Color(0xFFFF7048), Color(0xFFB7472D)))),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF0E110F), modifier = Modifier.size(23.dp))
+                    Icon(Icons.Rounded.GraphicEq, contentDescription = null, tint = Color(0xFF0B1018), modifier = Modifier.size(23.dp))
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                    GText("Zmusic", size = 21.sp, weight = FontWeight.Bold, tracking = (-0.45).sp)
-                    GText("Your personal music space", size = 11.sp, color = Glass.TextLo)
+                    GText("Z.", size = 27.sp, weight = FontWeight.Bold, tracking = (-1.3).sp)
+                    GText("THE RECORD SHELF", size = 9.sp, color = Glass.TextLo, tracking = 1.0.sp)
                 }
                 GText(if (loaded) "${songs.size} tracks" else "Loading…", size = 12.sp, color = Glass.TextLo)
             }
         }
 
         item {
-            Box(
+            Row(
                 Modifier
                     .fillMaxWidth()
-                    .height(164.dp)
-                    .clip(RoundedCornerShape(15.dp)),
+                    .height(166.dp)
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(Color(0xFF161F2A)),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (featuredSong != null) {
-                    Artwork(featuredSong, Modifier.fillMaxSize(), RoundedCornerShape(15.dp))
+                    Artwork(featuredSong, Modifier.width(136.dp).height(166.dp), RoundedCornerShape(0.dp))
                 } else {
-                    Box(Modifier.fillMaxSize().background(Color(0xFF212624)))
+                    Box(Modifier.width(136.dp).height(166.dp).background(Color(0xFF202B38)))
                 }
-                Box(
-                    Modifier.fillMaxSize().background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0xFF0E110F).copy(alpha = 0.05f),
-                                Color(0xFF0E110F).copy(alpha = 0.35f),
-                                Color(0xFF0A0D0B).copy(alpha = 0.96f),
-                            )
-                        )
-                    )
-                )
                 Column(
                     Modifier
-                        .align(Alignment.BottomStart)
-                        .fillMaxWidth()
-                        .padding(start = 15.dp, end = 15.dp, top = 12.dp, bottom = 14.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                        .weight(1f)
+                        .height(166.dp)
+                        .padding(horizontal = 12.dp, vertical = 13.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    GText("YOUR MUSIC, RIGHT NOW", size = 9.sp, weight = FontWeight.Bold, color = Color(0xFFBBD8C0), tracking = 1.2.sp)
-                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            GText(greeting, size = 20.sp, weight = FontWeight.SemiBold, maxLines = 1)
-                            GText(
-                                featuredSong?.title ?: "Start with your library",
-                                size = 13.sp,
-                                color = Color.White.copy(alpha = 0.9f),
-                                maxLines = 1,
-                            )
-                        }
-                        Box(
-                            Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(Color(0xFFA4C9AD), Color(0xFF5D8B69))))
-                                .clickable {
-                                    if (featuredSong != null) {
-                                        val index = songs.indexOfFirst { it.id == featuredSong.id }
-                                        if (index >= 0) onPlay(songs, index)
-                                    } else onOpenSongs()
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(Icons.Rounded.PlayArrow, contentDescription = "Play featured song", tint = Color.White, modifier = Modifier.size(25.dp))
-                        }
+                    GText("SIDE A / TONIGHT", size = 9.sp, weight = FontWeight.Bold, color = Color(0xFFFF7048), tracking = 1.0.sp)
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        GText(
+                            featuredSong?.title ?: "Start with your library",
+                            size = 16.sp,
+                            weight = FontWeight.Bold,
+                            maxLines = 2,
+                            tracking = (-0.25).sp,
+                        )
+                        GText(
+                            featuredSong?.artist ?: greeting,
+                            size = 11.sp,
+                            color = Glass.TextLo,
+                            maxLines = 1,
+                        )
+                    }
+                    Box(
+                        Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Brush.linearGradient(listOf(Color(0xFFFF7048), Color(0xFFF3B36A))))
+                            .clickable {
+                                if (featuredSong != null) {
+                                    val index = songs.indexOfFirst { it.id == featuredSong.id }
+                                    if (index >= 0) onPlay(songs, index)
+                                } else onOpenSongs()
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Rounded.PlayArrow, contentDescription = "Play featured song", tint = Color(0xFF0B1018), modifier = Modifier.size(23.dp))
                     }
                 }
             }
@@ -326,10 +321,10 @@ fun HomeScreen(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 GText("Quick access", size = 17.sp, weight = FontWeight.SemiBold)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HomeQuickAction("Liked", Icons.Rounded.Favorite, Color(0xFFC98B70), Modifier.weight(1f), onOpenLiked)
-                    HomeQuickAction("Albums", Icons.Rounded.Album, Color(0xFFA4C9AD), Modifier.weight(1f), onOpenAlbums)
-                    HomeQuickAction("Artists", Icons.Rounded.Person, Color(0xFF86B9B0), Modifier.weight(1f), onOpenArtists)
-                    HomeQuickAction("Equalizer", Icons.Rounded.GraphicEq, Color(0xFFA4C9AD), Modifier.weight(1f), onOpenEqualizer)
+                    HomeQuickAction("Liked", Icons.Rounded.Favorite, Color(0xFFF3B36A), Modifier.weight(1f), onOpenLiked)
+                    HomeQuickAction("Albums", Icons.Rounded.Album, Color(0xFFFF7048), Modifier.weight(1f), onOpenAlbums)
+                    HomeQuickAction("Artists", Icons.Rounded.Person, Color(0xFF78BCD1), Modifier.weight(1f), onOpenArtists)
+                    HomeQuickAction("Equalizer", Icons.Rounded.GraphicEq, Color(0xFFFF7048), Modifier.weight(1f), onOpenEqualizer)
                 }
             }
         }
@@ -349,35 +344,30 @@ fun HomeScreen(
                             color = Glass.TextLo,
                         )
                     }
-                    GText("See all", size = 12.sp, color = Color(0xFFA4C9AD), modifier = Modifier.clickable(onClick = onOpenSongs))
+                    GText("See all", size = 12.sp, color = Color(0xFFFF7048), modifier = Modifier.clickable(onClick = onOpenSongs))
                 }
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                     items(recentlyShown, key = { it.id }) { song ->
-                        Column(
+                        Row(
                             Modifier
-                                .width(116.dp)
+                                .width(248.dp)
+                                .height(64.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color(0xFF161F2A))
                                 .clickable {
                                     val index = songs.indexOfFirst { it.id == song.id }
                                     if (index >= 0) onPlay(songs, index)
-                                },
-                            verticalArrangement = Arrangement.spacedBy(5.dp),
-                        ) {
-                            Box(Modifier.size(116.dp)) {
-                                Artwork(song, Modifier.fillMaxSize(), RoundedCornerShape(10.dp))
-                                Box(
-                                    Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(6.dp)
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(Color.Black.copy(alpha = 0.58f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Play ${song.title}", tint = Color.White, modifier = Modifier.size(17.dp))
                                 }
+                                .padding(7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Artwork(song, Modifier.size(50.dp), RoundedCornerShape(5.dp))
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                GText(song.title, size = 12.sp, weight = FontWeight.SemiBold, maxLines = 2)
+                                GText(song.artist, size = 10.sp, color = Glass.TextLo, maxLines = 1)
                             }
-                            GText(song.title, size = 12.sp, weight = FontWeight.Medium, maxLines = 1)
-                            GText(song.artist, size = 10.sp, color = Glass.TextLo, maxLines = 1)
+                            Icon(Icons.Rounded.PlayArrow, contentDescription = "Play ${song.title}", tint = Color(0xFFFF7048), modifier = Modifier.size(18.dp))
                         }
                     }
                 }
@@ -387,9 +377,9 @@ fun HomeScreen(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 GText("Your library", size = 17.sp, weight = FontWeight.SemiBold)
-                HomeLibraryRow("Songs", "${songs.size} tracks", Icons.Rounded.MusicNote, Color(0xFFA4C9AD), onOpenSongs)
-                HomeLibraryRow("Albums", "$albumCount albums", Icons.Rounded.Album, Color(0xFF86B9B0), onOpenAlbums)
-                HomeLibraryRow("Artists", "$artistCount artists", Icons.Rounded.Person, Color(0xFF86B9B0), onOpenArtists)
+                HomeLibraryRow("Songs", "${songs.size} tracks", Icons.Rounded.MusicNote, Color(0xFFFF7048), onOpenSongs)
+                HomeLibraryRow("Albums", "$albumCount albums", Icons.Rounded.Album, Color(0xFF78BCD1), onOpenAlbums)
+                HomeLibraryRow("Artists", "$artistCount artists", Icons.Rounded.Person, Color(0xFF78BCD1), onOpenArtists)
             }
         }
     }
@@ -407,7 +397,7 @@ private fun HomeQuickAction(
         modifier
             .height(68.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF171C19))
+            .background(Color(0xFF161F2A))
             .clickable(onClick = onClick)
             .padding(horizontal = 5.dp, vertical = 9.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -430,7 +420,7 @@ private fun HomeLibraryRow(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF171C19))
+            .background(Color(0xFF161F2A))
             .clickable(onClick = onClick)
             .padding(horizontal = 9.dp, vertical = 7.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -500,7 +490,7 @@ fun SongsScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    GText("Songs", size = 25.sp, weight = FontWeight.SemiBold, tracking = (-0.55).sp)
+                    GText("Your music", size = 27.sp, weight = FontWeight.Bold, tracking = (-0.65).sp)
                     GText(if (loaded) songCount(songs.size) else "Scanning your library…", size = 12.sp, color = Glass.TextLo)
                 }
                 IconButton(onClick = { showSearch = !showSearch; if (!showSearch) query = "" }) {
@@ -516,8 +506,8 @@ fun SongsScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .clip(CircleShape)
-                    .background(Color(0xFF171C19))
+                    .clip(RoundedCornerShape(9.dp))
+                    .background(Color(0xFF161F2A))
                     .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(3.dp),
             ) {
@@ -551,7 +541,7 @@ fun SongsScreen(
                                 .fillMaxWidth()
                                 .height(42.dp)
                                 .clip(RoundedCornerShape(11.dp))
-                                .background(Color(0xFF171C19))
+                                .background(Color(0xFF161F2A))
                                 .padding(horizontal = 11.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(9.dp),
@@ -575,18 +565,18 @@ fun SongsScreen(
                 Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Brush.linearGradient(listOf(Color(0xFF5D8B69), Color(0xFF2E4635))))
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFFFF7048), Color(0xFFF3B36A))))
                     .clickable { if (visibleSongs.isNotEmpty()) onShuffle(visibleSongs) }
                     .padding(horizontal = 14.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(Icons.Rounded.Shuffle, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                GText("Shuffle play", size = 14.sp, weight = FontWeight.SemiBold)
+                Icon(Icons.Rounded.Shuffle, contentDescription = null, tint = Color(0xFF0B1018), modifier = Modifier.size(20.dp))
+                GText("Shuffle play", size = 14.sp, weight = FontWeight.Bold, color = Color(0xFF0B1018))
                 Spacer(Modifier.weight(1f))
-                GText("${visibleSongs.size} songs", size = 11.sp, color = Color.White.copy(alpha = 0.8f))
-                Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(21.dp))
+                GText("${visibleSongs.size} songs", size = 11.sp, color = Color(0xFF0B1018).copy(alpha = 0.78f))
+                Icon(Icons.Rounded.PlayArrow, contentDescription = null, tint = Color(0xFF0B1018), modifier = Modifier.size(21.dp))
             }
         }
         if (loaded && visibleSongs.isEmpty()) {
@@ -631,12 +621,12 @@ private fun LibraryFilter(
     Box(
         modifier
             .height(32.dp)
-            .clip(CircleShape)
-            .background(if (selected) Brush.linearGradient(listOf(Color(0xFF52795B), Color(0xFF2E4635))) else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent)))
+            .clip(RoundedCornerShape(7.dp))
+            .background(if (selected) Brush.linearGradient(listOf(Color(0xFFB7472D), Color(0xFF4B2A28))) else Brush.linearGradient(listOf(Color.Transparent, Color.Transparent)))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        GText(label, size = 12.sp, weight = if (selected) FontWeight.SemiBold else FontWeight.Medium, color = if (selected) Color.White else Glass.TextLo)
+        GText(label, size = 12.sp, weight = if (selected) FontWeight.SemiBold else FontWeight.Medium, color = if (selected) Color(0xFF0B1018) else Glass.TextLo)
     }
 }
 
@@ -654,8 +644,8 @@ private fun LibraryTrackRow(
     Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(9.dp))
-            .background(if (active) Color(0xFF1E2721) else Color.Transparent)
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (active) Color(0xFF1D2837) else Color.Transparent)
             .clickable(onClick = onPlay)
             .padding(horizontal = 4.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -663,7 +653,7 @@ private fun LibraryTrackRow(
     ) {
         Artwork(song, Modifier.size(42.dp), RoundedCornerShape(7.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            GText(song.title, size = 13.sp, weight = if (active) FontWeight.SemiBold else FontWeight.Medium, color = if (active) Color(0xFFC3DDC7) else Glass.TextHi)
+            GText(song.title, size = 13.sp, weight = if (active) FontWeight.SemiBold else FontWeight.Medium, color = if (active) Color(0xFFFFD2B8) else Glass.TextHi)
             GText(song.artist, size = 11.sp, color = Glass.TextLo)
         }
         if (active && playing) {
