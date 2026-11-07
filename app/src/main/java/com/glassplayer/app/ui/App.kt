@@ -181,7 +181,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF080A12), Color(0xFF0C1020), Color(0xFF111525))
+                    listOf(Color(0xFF0E110F), Color(0xFF121613), Color(0xFF171C19))
                 )
             )
     ) {
