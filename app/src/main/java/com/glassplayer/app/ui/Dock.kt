@@ -171,7 +171,7 @@ private fun NavPill(
         Modifier
             .fillMaxWidth()
             .height(58.dp)
-            .dockGlass(shape, Color(0xFF332A55))
+            .dockGlass(shape, Color(0xFF1D2921))
             .drawBehind {
                 val itemW = size.width / NavTabs.size
                 val inset = 4.dp.toPx()
@@ -182,7 +182,7 @@ private fun NavPill(
                 // A clear, sliding selected capsule like a native messaging app tab bar.
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(Color(0xFF3D3268), Color(0xFF272542)),
+                        listOf(Color(0xFF2C4232), Color(0xFF171C19)),
                         startY = top,
                         endY = top + h,
                     ),
@@ -202,7 +202,7 @@ private fun NavPill(
         NavTabs.forEachIndexed { i, t ->
             val active = i == selected
             val color by animateColorAsState(
-                if (active) Color(0xFFB5A0FF) else Color(0xFFD2D5E1),
+                if (active) Color(0xFFA4C9AD) else Color(0xFFE1E5DE),
                 label = "tabColor",
             )
             Column(
