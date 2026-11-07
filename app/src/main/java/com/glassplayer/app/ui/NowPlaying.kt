@@ -103,7 +103,7 @@ fun NowPlaying(
     val glow by animateColorAsState(accent, tween(700), label = "nowPlayingAccent")
 
     Box(Modifier.fillMaxSize()) {
-        GlassBackdrop(accent, wallpaperUri = wallpaperUri)
+        if (wallpaperUri != null) GlassBackdrop(accent, wallpaperUri = wallpaperUri)
 
         Column(
             Modifier
@@ -117,7 +117,7 @@ fun NowPlaying(
                     Icons.Rounded.KeyboardArrowDown, "Close player", onClose,
                     modifier = Modifier.align(Alignment.CenterStart), size = 38.dp,
                 )
-                GText("Now playing", size = 15.sp, weight = FontWeight.Medium, color = Glass.TextLo)
+                GText("NOW SPINNING", size = 10.sp, weight = FontWeight.Bold, color = Glass.TextLo, tracking = 1.2.sp)
                 GlassIconButton(
                     Icons.Rounded.QueueMusic, "Up next queue", onOpenQueue,
                     modifier = Modifier.align(Alignment.CenterEnd),
@@ -130,7 +130,7 @@ fun NowPlaying(
                 contentAlignment = Alignment.Center,
             ) {
                 val side = minOf(maxWidth, maxHeight, 310.dp)
-                val shape = RoundedCornerShape(14.dp)
+                val shape = RoundedCornerShape(6.dp)
                 Box(
                     Modifier
                         .size(side)
@@ -140,13 +140,15 @@ fun NowPlaying(
                 }
             }
 
+            GText("SIDE A  /  LOCAL LIBRARY", size = 9.sp, weight = FontWeight.Bold, color = glow, tracking = 1.0.sp, modifier = Modifier.padding(top = 4.dp))
+
             Row(
                 Modifier.fillMaxWidth().padding(top = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Column(Modifier.weight(1f)) {
-                    GText(song.title, size = 20.sp, weight = FontWeight.SemiBold, maxLines = 2, tracking = (-0.25).sp)
+                    GText(song.title, size = 23.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.4).sp)
                     GText(song.artist, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
                 }
                 GlassIconButton(
@@ -194,7 +196,7 @@ fun NowPlaying(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 9.dp)
-                    .glassCard(RoundedCornerShape(16.dp), Color(0xFF212624), 0.75f)
+                    .clip(RoundedCornerShape(8.dp)).background(Color(0xFF161F2A)).border(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(8.dp))
                     .padding(horizontal = 4.dp, vertical = 9.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -258,7 +260,7 @@ fun NowPlaying(
             ) {
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 22.dp)
-                        .glassCard(RoundedCornerShape(20.dp), glow, 0.95f)
+                        .clip(RoundedCornerShape(12.dp)).background(Color(0xFF161F2A)).border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -328,7 +330,7 @@ private fun PlayerActionItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(icon, contentDescription = title, tint = Color(0xFFA4C9AD), modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = title, tint = Color(0xFFFF7048), modifier = Modifier.size(20.dp))
         GText(title, size = 10.sp, weight = FontWeight.Medium, color = Glass.TextHi)
         if (subtitle.isNotEmpty()) GText(subtitle, size = 9.sp, color = Glass.TextLo)
     }
