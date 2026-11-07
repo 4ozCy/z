@@ -30,13 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Glass {
-    val Ink = Color(0xFF090B13)
-    val Aqua = Color(0xFFAA91FF)
-    val Blue = Color(0xFF6F9CFF)
-    val Violet = Color(0xFF8C7CE8)
-    val Coral = Color(0xFFF08FAE)
+    val Ink = Color(0xFF0E110F)
+    val Aqua = Color(0xFFA4C9AD)
+    val Blue = Color(0xFF86B9B0)
+    val Violet = Color(0xFF5D8B69)
+    val Coral = Color(0xFFC98B70)
     val TextHi = Color(0xFFF3F5F3)
-    val TextLo = Color(0xFFA2AAA5)
+    val TextLo = Color(0xFF9EA89E)
 }
 
 /** Bright on the top-left and bottom-right edges, nearly clear between: the "light catching glass" rim. */
