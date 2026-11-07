@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -75,6 +76,17 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
         )
     }
     var favoritesOnly by rememberSaveable { mutableStateOf(false) }
+    var recentSongIds by remember(prefs) {
+        mutableStateOf(
+            prefs.getString("recentSongIds", "")
+                .orEmpty()
+                .split(',')
+                .mapNotNull { it.toLongOrNull() }
+                .take(20)
+        )
+    }
+    var lastLibraryTab by rememberSaveable { mutableIntStateOf(1) }
+    var secondaryReturnTab by rememberSaveable { mutableIntStateOf(4) }
     var renameDraft by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
     var pendingRename by remember { mutableStateOf<Pair<Song, String>?>(null) }
@@ -96,6 +108,28 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
 
     val current = songs.firstOrNull { it.id == ui.currentId }
     val renameTarget = current ?: songs.firstOrNull()
+    val recentSongIdsSet = remember(recentSongIds) { recentSongIds.toSet() }
+    val recentSongs = remember(songs, recentSongIds) {
+        recentSongIds.mapNotNull { id -> songs.firstOrNull { it.id == id } }
+    }
+    LaunchedEffect(ui.currentId) {
+        val id = ui.currentId
+        if (id != null) {
+            val updated = (listOf(id) + recentSongIds.filterNot { it == id }).take(20)
+            if (updated != recentSongIds) {
+                recentSongIds = updated
+                prefs.edit().putString("recentSongIds", updated.joinToString(",")).apply()
+            }
+        }
+    }
+    val selectLibraryTab: (Int) -> Unit = { next ->
+        lastLibraryTab = next
+        tab = next
+    }
+    val openPlayer: () -> Unit = {
+        if (tab in 0..3) lastLibraryTab = tab
+        tab = 4
+    }
     val albums = remember(songs) { albumsOf(songs) }
     val artists = remember(songs) { artistsOf(songs) }
     val songsList = rememberLazyListState()
@@ -151,102 +185,116 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                 )
             )
     ) {
+
         when (tab) {
-                0 -> SongsScreen(
-                    songs = songs,
-                    loaded = loaded,
-                    ui = ui,
-                    accent = accent,
-                    state = songsList,
-                    pad = pad,
-                    onPlay = vm::playQueue,
-                    onShuffle = vm::playShuffled,
-                    favoriteIds = favoriteIds,
-                    favoritesOnly = favoritesOnly,
-                    onFavoritesOnlyChange = { favoritesOnly = it },
-                    onToggleFavorite = onToggleFavorite,
-                    onOpenAlbums = { favoritesOnly = false; tab = 1 },
-                    onOpenArtists = { favoritesOnly = false; tab = 2 },
-                )
-                1 -> AlbumsScreen(
-                    albums = albums,
-                    state = albumsGrid,
-                    pad = pad,
-                    onOpen = { group -> vm.playQueue(group.songs, 0) },
-                )
-                2 -> ArtistsScreen(
-                    artists = artists,
-                    state = songsList,
-                    pad = pad,
-                    onOpen = { group -> vm.playQueue(group.songs, 0) },
-                )
-                4 -> {
-                    if (current != null) {
-                        NowPlaying(
-                            song = current,
-                            ui = ui,
-                            position = positionState,
-                            accent = accent,
-                            onClose = { tab = 0 },
-                            onTogglePlay = vm::togglePlay,
-                            onPrevious = vm::previous,
-                            onNext = vm::next,
-                            onSeek = vm::seekTo,
-                            onShuffle = vm::toggleShuffle,
-                            onRepeat = vm::cycleRepeat,
-                            isFavorite = current.id in favoriteIds,
-                            onToggleFavorite = { onToggleFavorite(current) },
-                            playbackSpeed = ui.playbackSpeed,
-                            onSetPlaybackSpeed = vm::setPlaybackSpeed,
-                            sleepTimerRemainingMs = sleepTimerRemainingMs,
-                            onStartSleepTimer = vm::startSleepTimer,
-                            onCancelSleepTimer = vm::cancelSleepTimer,
-                            onOpenEqualizer = { tab = 5 },
-                            onOpenQueue = { tab = 6 },
-                        )
-                    } else {
-                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            EmptyNote("Nothing playing", "Choose a song from your library to open the player.")
-                        }
+            0 -> HomeScreen(
+                songs = songs,
+                recentSongs = recentSongs,
+                loaded = loaded,
+                ui = ui,
+                accent = accent,
+                pad = pad,
+                favoriteIds = favoriteIds,
+                onOpenSongs = { selectLibraryTab(1) },
+                onOpenAlbums = { selectLibraryTab(2) },
+                onOpenArtists = { selectLibraryTab(3) },
+                onOpenLiked = { favoritesOnly = true; selectLibraryTab(1) },
+                onOpenEqualizer = { secondaryReturnTab = 0; tab = 5 },
+                onPlay = vm::playQueue,
+            )
+            1 -> SongsScreen(
+                songs = songs,
+                loaded = loaded,
+                ui = ui,
+                accent = accent,
+                state = songsList,
+                pad = pad,
+                onPlay = vm::playQueue,
+                onShuffle = vm::playShuffled,
+                favoriteIds = favoriteIds,
+                favoritesOnly = favoritesOnly,
+                onFavoritesOnlyChange = { favoritesOnly = it },
+                onToggleFavorite = onToggleFavorite,
+                recentSongIds = recentSongIdsSet,
+            )
+            2 -> AlbumsScreen(
+                albums = albums,
+                state = albumsGrid,
+                pad = pad,
+                onOpen = { group -> vm.playQueue(group.songs, 0) },
+            )
+            3 -> ArtistsScreen(
+                artists = artists,
+                state = songsList,
+                pad = pad,
+                onOpen = { group -> vm.playQueue(group.songs, 0) },
+            )
+            4 -> {
+                if (current != null) {
+                    NowPlaying(
+                        song = current,
+                        ui = ui,
+                        position = positionState,
+                        accent = accent,
+                        onClose = { tab = lastLibraryTab },
+                        onTogglePlay = vm::togglePlay,
+                        onPrevious = vm::previous,
+                        onNext = vm::next,
+                        onSeek = vm::seekTo,
+                        onShuffle = vm::toggleShuffle,
+                        onRepeat = vm::cycleRepeat,
+                        isFavorite = current.id in favoriteIds,
+                        onToggleFavorite = { onToggleFavorite(current) },
+                        playbackSpeed = ui.playbackSpeed,
+                        onSetPlaybackSpeed = vm::setPlaybackSpeed,
+                        sleepTimerRemainingMs = sleepTimerRemainingMs,
+                        onStartSleepTimer = vm::startSleepTimer,
+                        onCancelSleepTimer = vm::cancelSleepTimer,
+                        onOpenEqualizer = { secondaryReturnTab = 4; tab = 5 },
+                        onOpenQueue = { secondaryReturnTab = 4; tab = 6 },
+                    )
+                } else {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        EmptyNote("Nothing playing", "Choose a song from your library to open the player.")
                     }
                 }
-                5 -> EqualizerScreen(onBack = { tab = 4 })
-                6 -> QueueScreen(
-                    queue = queueState.songs,
-                    currentIndex = queueState.currentIndex,
-                    onBack = { tab = 4 },
-                    onPlay = vm::playQueueItem,
-                    onMove = vm::moveQueueItem,
-                    onRemove = vm::removeQueueItem,
-                )
-                else -> SongsScreen(
-                    songs = songs,
-                    loaded = loaded,
-                    ui = ui,
-                    accent = accent,
-                    state = songsList,
-                    pad = pad,
-                    onPlay = vm::playQueue,
-                    onShuffle = vm::playShuffled,
-                    favoriteIds = favoriteIds,
-                    favoritesOnly = favoritesOnly,
-                    onFavoritesOnlyChange = { favoritesOnly = it },
-                    onToggleFavorite = onToggleFavorite,
-                    onOpenAlbums = { favoritesOnly = false; tab = 1 },
-                    onOpenArtists = { favoritesOnly = false; tab = 2 },
-                )
+            }
+            5 -> EqualizerScreen(onBack = { tab = secondaryReturnTab })
+            6 -> QueueScreen(
+                queue = queueState.songs,
+                currentIndex = queueState.currentIndex,
+                onBack = { tab = 4 },
+                onPlay = vm::playQueueItem,
+                onMove = vm::moveQueueItem,
+                onRemove = vm::removeQueueItem,
+            )
+            else -> HomeScreen(
+                songs = songs,
+                recentSongs = recentSongs,
+                loaded = loaded,
+                ui = ui,
+                accent = accent,
+                pad = pad,
+                favoriteIds = favoriteIds,
+                onOpenSongs = { selectLibraryTab(1) },
+                onOpenAlbums = { selectLibraryTab(2) },
+                onOpenArtists = { selectLibraryTab(3) },
+                onOpenLiked = { favoritesOnly = true; selectLibraryTab(1) },
+                onOpenEqualizer = { secondaryReturnTab = 0; tab = 5 },
+                onPlay = vm::playQueue,
+            )
         }
 
         if (tab !in 4..6 || current == null) Dock(
-            tab = if (tab in 0..2) tab else 0,
-            onTab = { tab = it },
+            tab = if (tab in 0..3) tab else 0,
+            onTab = selectLibraryTab,
             current = current,
             ui = ui,
             position = positionState,
             accent = accent,
             onTogglePlay = vm::togglePlay,
             onNext = vm::next,
-            onOpenPlayer = { if (current != null) tab = 4 },
+            onOpenPlayer = { if (current != null) openPlayer() },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },

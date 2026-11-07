@@ -19,10 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Album
+import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Icon
@@ -53,6 +53,7 @@ import kotlin.math.abs
 private data class NavTab(val label: String, val icon: ImageVector)
 
 private val NavTabs = listOf(
+    NavTab("Home", Icons.Rounded.Home),
     NavTab("Songs", Icons.Rounded.MusicNote),
     NavTab("Albums", Icons.Rounded.Album),
     NavTab("Artists", Icons.Rounded.Person),
