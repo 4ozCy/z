@@ -30,10 +30,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Album
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.LibraryMusic
+import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Shuffle
@@ -206,45 +208,180 @@ fun SongsScreen(
     favoritesOnly: Boolean,
     onFavoritesOnlyChange: (Boolean) -> Unit,
     onToggleFavorite: (Song) -> Unit,
+    onOpenAlbums: () -> Unit,
+    onOpenArtists: () -> Unit,
 ) {
-    val visibleSongs = remember(songs, favoriteIds, favoritesOnly) {
-        if (favoritesOnly) songs.filter { it.id in favoriteIds } else songs
+    var query by rememberSaveable { mutableStateOf("") }
+    val visibleSongs = remember(songs, favoriteIds, favoritesOnly, query) {
+        val source = if (favoritesOnly) songs.filter { it.id in favoriteIds } else songs
+        val q = query.trim().lowercase()
+        if (q.isBlank()) source else source.filter {
+            it.title.lowercase().contains(q) ||
+                it.artist.lowercase().contains(q) ||
+                it.album.lowercase().contains(q)
+        }
     }
     val likedCount = songs.count { it.id in favoriteIds }
+    val albumCount = remember(songs) { albumsOf(songs).size }
+    val artistCount = remember(songs) { artistsOf(songs).size }
 
     LazyColumn(
         Modifier.fillMaxSize(),
         state = state,
         contentPadding = pad,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item {
-            ScreenHeader(
-                if (favoritesOnly) "Liked songs" else "Songs",
-                if (!loaded) "Scanning your library…"
-                else if (favoritesOnly) "$likedCount songs you saved"
-                else songCount(songs.size),
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                if (visibleSongs.isNotEmpty()) {
-                    GlassPillButton("Play all", Icons.Rounded.PlayArrow, { onPlay(visibleSongs, 0) }, tint = accent)
-                    GlassPillButton("Shuffle", Icons.Rounded.Shuffle, { onShuffle(visibleSongs) })
+                Box(
+                    Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Brush.linearGradient(listOf(Color(0xFFB6A0FF), Color(0xFF5E6DDB)))),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    GText("Z", size = 26.sp, weight = FontWeight.Bold, color = Color(0xFF101020))
+                }
+                Column(Modifier.weight(1f)) {
+                    GText("Zmusic", size = 21.sp, weight = FontWeight.Bold, tracking = (-0.5).sp)
+                    GText("Your music, your way", size = 12.sp, color = Glass.TextLo)
+                }
+                GText(if (!loaded) "Loading" else "${songs.size} tracks", size = 12.sp, color = Glass.TextLo)
+            }
+        }
+        item {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                GText(if (favoritesOnly) "Liked songs" else "Your library", size = 25.sp, weight = FontWeight.SemiBold, tracking = (-0.55).sp)
+                GText(
+                    if (favoritesOnly) "$likedCount songs saved for later" else "Everything saved on this device.",
+                    size = 13.sp,
+                    color = Glass.TextLo,
+                )
+            }
+        }
+        item {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .glassCard(RoundedCornerShape(17.dp), Color(0xFF7461C7), 1.15f)
+                    .padding(horizontal = 15.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    GText("YOUR COLLECTION", size = 10.sp, weight = FontWeight.Bold, color = accent, tracking = 1.1.sp)
+                    GText("${songs.size} tracks", size = 22.sp, weight = FontWeight.SemiBold)
+                    GText("$albumCount albums · $artistCount artists", size = 12.sp, color = Glass.TextLo)
+                }
+                Box(
+                    Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(Color(0xFFB6A0FF), Color(0xFF657DF2))))
+                        .clickable { if (visibleSongs.isNotEmpty()) onPlay(visibleSongs, 0) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Rounded.PlayArrow, contentDescription = "Play all songs", tint = Color(0xFF101020), modifier = Modifier.size(25.dp))
                 }
             }
         }
         item {
-            GlassPillButton(
-                if (favoritesOnly) "Show all songs" else "Liked songs ($likedCount)",
-                if (favoritesOnly) Icons.Rounded.LibraryMusic else Icons.Rounded.Favorite,
-                { onFavoritesOnlyChange(!favoritesOnly) },
-                tint = if (favoritesOnly) accent else Glass.Coral,
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                QuickLibraryCard(
+                    title = "Liked",
+                    subtitle = "$likedCount songs",
+                    icon = Icons.Rounded.Favorite,
+                    tint = Glass.Coral,
+                    modifier = Modifier.weight(1f),
+                    selected = favoritesOnly,
+                    onClick = { onFavoritesOnlyChange(!favoritesOnly) },
+                )
+                QuickLibraryCard(
+                    title = "Albums",
+                    subtitle = "$albumCount albums",
+                    icon = Icons.Rounded.Album,
+                    tint = Color(0xFF8E9DFF),
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenAlbums,
+                )
+                QuickLibraryCard(
+                    title = "Artists",
+                    subtitle = "$artistCount artists",
+                    icon = Icons.Rounded.Person,
+                    tint = Color(0xFF9B8AFF),
+                    modifier = Modifier.weight(1f),
+                    onClick = onOpenArtists,
+                )
+            }
+        }
+        item {
+            BasicTextField(
+                value = query,
+                onValueChange = { query = it },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = TextStyle(color = Glass.TextHi, fontSize = 14.sp),
+                cursorBrush = SolidColor(accent),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                decorationBox = { inner ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                            .glassCard(RoundedCornerShape(13.dp), Color(0xFF657DF2), 0.75f)
+                            .padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                    ) {
+                        Icon(Icons.Rounded.Search, null, tint = Glass.TextLo, modifier = Modifier.size(19.dp))
+                        Box(Modifier.weight(1f)) {
+                            if (query.isEmpty()) GText("Search songs, artists, albums", size = 14.sp, color = Glass.TextLo)
+                            inner()
+                        }
+                        if (query.isNotEmpty()) {
+                            Icon(
+                                Icons.Rounded.Close,
+                                contentDescription = "Clear search",
+                                tint = Glass.TextLo,
+                                modifier = Modifier.clip(CircleShape).clickable { query = "" }.padding(2.dp),
+                            )
+                        }
+                    }
+                },
             )
+        }
+        item {
+            Row(
+                Modifier.fillMaxWidth().padding(top = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    GText(if (query.isBlank()) "All songs" else "Search results", size = 18.sp, weight = FontWeight.SemiBold)
+                    GText(if (query.isBlank()) songCount(visibleSongs.size) else "${visibleSongs.size} matches", size = 12.sp, color = Glass.TextLo)
+                }
+                if (visibleSongs.isNotEmpty()) {
+                    GlassPillButton("Shuffle", Icons.Rounded.Shuffle, { onShuffle(visibleSongs) }, tint = Color(0xFF7C6BD4))
+                }
+            }
         }
         if (loaded && visibleSongs.isEmpty()) {
             item {
                 EmptyNote(
-                    if (favoritesOnly) "No liked songs yet" else "No music found",
-                    if (favoritesOnly) "Tap the heart beside any song to save it here."
-                    else "Copy some songs to this phone and reopen Zmusic.",
+                    when {
+                        favoritesOnly && query.isBlank() -> "No liked songs yet"
+                        query.isNotBlank() -> "No matches found"
+                        else -> "No music found"
+                    },
+                    when {
+                        favoritesOnly && query.isBlank() -> "Tap the heart beside any song to save it here."
+                        query.isNotBlank() -> "Try a different title, artist, or album."
+                        else -> "Copy some music to this phone and rescan your library."
+                    },
                 )
             }
         }
@@ -258,6 +395,36 @@ fun SongsScreen(
                 onToggleFavorite = { onToggleFavorite(s) },
                 onClick = { onPlay(visibleSongs, i) },
             )
+        }
+    }
+}
+
+@Composable
+private fun QuickLibraryCard(
+    title: String,
+    subtitle: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    onClick: () -> Unit,
+) {
+    Column(
+        modifier
+            .height(78.dp)
+            .glassCard(
+                RoundedCornerShape(14.dp),
+                if (selected) tint else Color(0xFF20243A),
+                if (selected) 1.15f else 0.8f,
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 9.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(icon, contentDescription = title, tint = tint, modifier = Modifier.size(19.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            GText(title, size = 12.sp, weight = FontWeight.SemiBold)
+            GText(subtitle, size = 10.sp, color = Glass.TextLo)
         }
     }
 }

@@ -23,7 +23,6 @@ import androidx.compose.material.icons.rounded.MusicNote
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Icon
@@ -57,8 +56,6 @@ private val NavTabs = listOf(
     NavTab("Songs", Icons.Rounded.MusicNote),
     NavTab("Albums", Icons.Rounded.Album),
     NavTab("Artists", Icons.Rounded.Person),
-    NavTab("Search", Icons.Rounded.Search),
-    NavTab("Player", Icons.Rounded.PlayArrow),
 )
 
 /** Floating bottom control: a mini player that docks above a pill of tabs, both made of live glass. */
@@ -173,7 +170,7 @@ private fun NavPill(
         Modifier
             .fillMaxWidth()
             .height(58.dp)
-            .dockGlass(shape, Color(0xFF26384B))
+            .dockGlass(shape, Color(0xFF332A55))
             .drawBehind {
                 val itemW = size.width / NavTabs.size
                 val inset = 4.dp.toPx()
@@ -184,7 +181,7 @@ private fun NavPill(
                 // A clear, sliding selected capsule like a native messaging app tab bar.
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(Color(0xFF263F59), Color(0xFF1D3045)),
+                        listOf(Color(0xFF3D3268), Color(0xFF272542)),
                         startY = top,
                         endY = top + h,
                     ),
@@ -204,7 +201,7 @@ private fun NavPill(
         NavTabs.forEachIndexed { i, t ->
             val active = i == selected
             val color by animateColorAsState(
-                if (active) Color(0xFF36A5FF) else Color(0xFFE1E6EC),
+                if (active) Color(0xFFB5A0FF) else Color(0xFFD2D5E1),
                 label = "tabColor",
             )
             Column(

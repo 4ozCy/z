@@ -147,7 +147,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF0C0F0E), Color(0xFF101311), Color(0xFF121513))
+                    listOf(Color(0xFF080A12), Color(0xFF0C1020), Color(0xFF111525))
                 )
             )
     ) {
@@ -165,6 +165,8 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     favoritesOnly = favoritesOnly,
                     onFavoritesOnlyChange = { favoritesOnly = it },
                     onToggleFavorite = onToggleFavorite,
+                    onOpenAlbums = { favoritesOnly = false; tab = 1 },
+                    onOpenArtists = { favoritesOnly = false; tab = 2 },
                 )
                 1 -> AlbumsScreen(
                     albums = albums,
@@ -177,15 +179,6 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     state = songsList,
                     pad = pad,
                     onOpen = { group -> vm.playQueue(group.songs, 0) },
-                )
-                3 -> SearchScreen(
-                    songs = songs,
-                    ui = ui,
-                    accent = accent,
-                    pad = pad,
-                    onPlay = vm::playQueue,
-                    favoriteIds = favoriteIds,
-                    onToggleFavorite = onToggleFavorite,
                 )
                 4 -> {
                     if (current != null) {
@@ -239,11 +232,13 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
                     favoritesOnly = favoritesOnly,
                     onFavoritesOnlyChange = { favoritesOnly = it },
                     onToggleFavorite = onToggleFavorite,
+                    onOpenAlbums = { favoritesOnly = false; tab = 1 },
+                    onOpenArtists = { favoritesOnly = false; tab = 2 },
                 )
         }
 
         if (tab !in 4..6 || current == null) Dock(
-            tab = tab,
+            tab = if (tab in 0..2) tab else 0,
             onTab = { tab = it },
             current = current,
             ui = ui,

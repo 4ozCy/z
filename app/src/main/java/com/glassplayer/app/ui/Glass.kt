@@ -30,11 +30,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Glass {
-    val Ink = Color(0xFF0B0D0C)
-    val Aqua = Color(0xFF70D6A3)
-    val Blue = Color(0xFF36A5FF)
-    val Violet = Color(0xFF8F9AB0)
-    val Coral = Color(0xFFE69A9D)
+    val Ink = Color(0xFF090B13)
+    val Aqua = Color(0xFFAA91FF)
+    val Blue = Color(0xFF6F9CFF)
+    val Violet = Color(0xFF8C7CE8)
+    val Coral = Color(0xFFF08FAE)
     val TextHi = Color(0xFFF3F5F3)
     val TextLo = Color(0xFFA2AAA5)
 }
