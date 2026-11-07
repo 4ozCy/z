@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -64,14 +66,14 @@ fun EqualizerScreen(onBack: () -> Unit) {
     }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            GlassIconButton(Icons.Rounded.ArrowBack, "Back to player", onBack, size = 40.dp)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            GlassIconButton(Icons.Rounded.ArrowBack, "Back to player", onBack, size = 36.dp)
             Column(Modifier.weight(1f)) {
                 GText("SOUND STUDIO", size = 11.sp, weight = FontWeight.Bold, color = Glass.Aqua)
-                GText("Equalizer", size = 26.sp, weight = FontWeight.Bold)
+                GText("Equalizer", size = 23.sp, weight = FontWeight.SemiBold)
                 GText(
                     if (state.equalizerAvailable) "Device audio · ${state.bands.size} bands" else "Device audio effects",
                     size = 12.sp,
@@ -82,10 +84,10 @@ fun EqualizerScreen(onBack: () -> Unit) {
 
         Column(
             Modifier.fillMaxWidth()
-                .background(Color(0xFF111513), RoundedCornerShape(18.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(18.dp))
-                .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .background(Color(0xFF151917), RoundedCornerShape(14.dp))
+                .border(0.75.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
+                .padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -123,7 +125,7 @@ fun EqualizerScreen(onBack: () -> Unit) {
                 }
 
                 Column(
-                    Modifier.fillMaxWidth().background(Color(0xFF0B0E0C), RoundedCornerShape(14.dp)).padding(vertical = 12.dp, horizontal = 8.dp),
+                    Modifier.fillMaxWidth().background(Color(0xFF0D100E), RoundedCornerShape(10.dp)).padding(vertical = 8.dp, horizontal = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
                     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -215,7 +217,7 @@ private fun PresetChip(name: String, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun EqualizerGraph(bands: List<EqualizerBandState>, enabled: Boolean) {
-    Canvas(Modifier.fillMaxWidth().height(112.dp)) {
+    Canvas(Modifier.fillMaxWidth().height(84.dp)) {
         val left = 8.dp.toPx()
         val right = size.width - 8.dp.toPx()
         val top = 8.dp.toPx()
@@ -273,7 +275,7 @@ private fun VerticalBandControl(
     ) {
         GText(valueText, size = 10.sp, weight = FontWeight.SemiBold, color = if (enabled) Glass.Aqua else Glass.TextLo)
         Canvas(
-            Modifier.width(36.dp).height(132.dp)
+            Modifier.width(32.dp).height(104.dp)
                 .semantics {
                     contentDescription = "${band.label} equalizer band"
                     stateDescription = "$valueText dB"
@@ -341,19 +343,19 @@ private fun EffectCard(
     Column(
         Modifier.fillMaxWidth().background(Color(0xFF111513), RoundedCornerShape(16.dp))
             .border(1.dp, Color.White.copy(alpha = 0.09f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(38.dp).background(Glass.Aqua.copy(alpha = 0.09f), RoundedCornerShape(10.dp)),
+                Modifier.size(32.dp).background(Glass.Aqua.copy(alpha = 0.07f), RoundedCornerShape(8.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 GText(iconLabel, size = 9.sp, weight = FontWeight.Bold, color = Glass.Aqua)
             }
             Column(Modifier.weight(1f).padding(start = 10.dp)) {
-                GText(title, size = 15.sp, weight = FontWeight.SemiBold)
-                GText(subtitle, size = 11.sp, color = Glass.TextLo)
+                GText(title, size = 14.sp, weight = FontWeight.Medium)
+                GText(subtitle, size = 10.sp, color = Glass.TextLo)
             }
             Switch(checked = enabled, onCheckedChange = onToggle)
         }

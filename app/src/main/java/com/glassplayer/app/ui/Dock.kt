@@ -79,9 +79,9 @@ fun Dock(
         modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+            .padding(start = 14.dp, end = 14.dp, bottom = 6.dp)
             .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         if (current != null) {
             MiniPlayer(current, ui, position, accent, onTogglePlay, onNext, onOpenPlayer)
@@ -100,18 +100,18 @@ private fun MiniPlayer(
     onNext: () -> Unit,
     onOpen: () -> Unit,
 ) {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(13.dp)
     Row(
         Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(52.dp)
             .dockGlass(shape, accent)
             .clickable(onClick = onOpen)
             .drawBehind {
                 val dur = ui.durationMs
                 if (dur > 0) {
                     val p = (position.value.toFloat() / dur).coerceIn(0f, 1f)
-                    val x0 = 26.dp.toPx()
+                    val x0 = 20.dp.toPx()
                     val w = size.width - 2 * x0
                     val y = size.height - 7.dp.toPx()
                     val h = 2.dp.toPx()
@@ -119,19 +119,19 @@ private fun MiniPlayer(
                     drawRoundRect(accent, Offset(x0, y), Size(w * p, h), CornerRadius(h / 2))
                 }
             }
-            .padding(start = 10.dp, end = 8.dp),
+            .padding(start = 8.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Artwork(song, Modifier.size(40.dp), RoundedCornerShape(8.dp))
+        Artwork(song, Modifier.size(36.dp), RoundedCornerShape(7.dp))
         Column(Modifier.weight(1f)) {
-            GText(song.title, size = 14.sp, weight = FontWeight.SemiBold)
-            GText(song.artist, size = 12.sp, color = Glass.TextLo)
+            GText(song.title, size = 13.sp, weight = FontWeight.Medium)
+            GText(song.artist, size = 11.sp, color = Glass.TextLo)
         }
-        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(38.dp))
+        PlayPauseButton(ui.isPlaying, onTogglePlay, Modifier.size(34.dp))
         GlassIconButton(
             Icons.Rounded.SkipNext, "Next song", onNext,
-            size = 36.dp, iconSize = 22.dp, filled = false,
+            size = 32.dp, iconSize = 20.dp, filled = false,
         )
     }
 }
@@ -149,7 +149,7 @@ fun PlayPauseButton(playing: Boolean, onClick: () -> Unit, modifier: Modifier = 
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 contentDescription = if (isPlaying) "Pause" else "Play",
                 tint = Glass.TextHi,
-                modifier = Modifier.size(26.dp),
+                modifier = Modifier.size(22.dp),
             )
         }
     }
@@ -167,24 +167,23 @@ private fun NavPill(
     LaunchedEffect(selected) {
         pos.animateTo(selected.toFloat(), spring(dampingRatio = 0.88f, stiffness = 340f))
     }
-    val shape = RoundedCornerShape(18.dp)
+    val shape = RoundedCornerShape(15.dp)
 
     Row(
         Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(52.dp)
             .dockGlass(shape)
             .drawBehind {
                 val itemW = size.width / NavTabs.size
-                val inset = 6.dp.toPx()
-                val stretch = abs(selected - pos.value).coerceIn(0f, 1f)
-                val w = (itemW - inset * 2) * (1f + 0.30f * stretch)
-                val h = (size.height - inset * 2) * (1f - 0.06f * stretch)
+                val inset = 5.dp.toPx()
+                val w = itemW - inset * 2
+                val h = size.height - inset * 2
                 val left = (pos.value + 0.5f) * itemW - w / 2f
                 val top = (size.height - h) / 2f
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.17f), Color.White.copy(alpha = 0.035f)),
+                        listOf(accent.copy(alpha = 0.13f), accent.copy(alpha = 0.08f)),
                         startY = top,
                         endY = top + h,
                     ),
@@ -194,14 +193,14 @@ private fun NavPill(
                 )
                 drawRoundRect(
                     brush = Brush.linearGradient(
-                        listOf(Color.White.copy(alpha = 0.20f), Color.White.copy(alpha = 0.025f), Color.White.copy(alpha = 0.12f)),
+                        listOf(Color.White.copy(alpha = 0.11f), Color.White.copy(alpha = 0.02f), Color.White.copy(alpha = 0.06f)),
                         start = Offset(left, top),
                         end = Offset(left + w, top + h),
                     ),
                     topLeft = Offset(left, top),
                     size = Size(w, h),
                     cornerRadius = CornerRadius(h / 2f),
-                    style = Stroke(width = 0.7.dp.toPx()),
+                    style = Stroke(width = 0.5.dp.toPx()),
                 )
             },
     ) {
@@ -225,7 +224,7 @@ private fun NavPill(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(22.dp))
+                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(20.dp))
                 GText(
                     t.label,
                     size = 10.sp,

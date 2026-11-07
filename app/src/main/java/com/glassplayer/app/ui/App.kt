@@ -107,10 +107,10 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
     val topInset: Dp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val pad = remember(topInset, dockHeight) {
         PaddingValues(
-            start = 18.dp,
-            end = 18.dp,
-            top = topInset + 14.dp,
-            bottom = dockHeight + 28.dp,
+            start = 16.dp,
+            end = 16.dp,
+            top = topInset + 10.dp,
+            bottom = dockHeight + 20.dp,
         )
     }
 
@@ -147,7 +147,7 @@ fun GlassPlayerApp(vm: PlayerViewModel) {
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF0B0D0C), Color(0xFF101312), Color(0xFF151817))
+                    listOf(Color(0xFF0C0F0E), Color(0xFF101311), Color(0xFF121513))
                 )
             )
     ) {

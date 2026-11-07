@@ -110,12 +110,12 @@ fun NowPlaying(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(start = 26.dp, end = 26.dp, top = 8.dp, bottom = 20.dp),
+                .padding(start = 22.dp, end = 22.dp, top = 4.dp, bottom = 12.dp),
         ) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 GlassIconButton(
                     Icons.Rounded.KeyboardArrowDown, "Close player", onClose,
-                    modifier = Modifier.align(Alignment.CenterStart), size = 44.dp,
+                    modifier = Modifier.align(Alignment.CenterStart), size = 38.dp,
                 )
                 GText("Now playing", size = 15.sp, weight = FontWeight.Medium, color = Glass.TextLo)
                 Row(
@@ -135,10 +135,10 @@ fun NowPlaying(
             }
 
             BoxWithConstraints(
-                Modifier.weight(1f).fillMaxWidth().padding(vertical = 18.dp),
+                Modifier.weight(1f).fillMaxWidth().padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                val side = minOf(maxWidth, maxHeight, 320.dp)
+                val side = minOf(maxWidth, maxHeight, 280.dp)
                 val shape = RoundedCornerShape(16.dp)
                 Box(
                     Modifier
@@ -155,24 +155,24 @@ fun NowPlaying(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Column(Modifier.weight(1f)) {
-                    GText(song.title, size = 22.sp, weight = FontWeight.Bold, maxLines = 2, tracking = (-0.35).sp)
-                    GText(song.artist, size = 14.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 3.dp))
+                    GText(song.title, size = 20.sp, weight = FontWeight.SemiBold, maxLines = 2, tracking = (-0.25).sp)
+                    GText(song.artist, size = 13.sp, color = Glass.TextLo, modifier = Modifier.padding(top = 2.dp))
                 }
                 GlassIconButton(
                     if (isFavorite) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder,
                     if (isFavorite) "Remove from liked songs" else "Add to liked songs",
                     onToggleFavorite,
-                    size = 42.dp,
-                    iconSize = 22.dp,
+                    size = 38.dp,
+                    iconSize = 20.dp,
                     tint = if (isFavorite) Glass.Aqua else Glass.TextLo,
                     filled = false,
                 )
             }
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 10.dp),
+                Modifier.fillMaxWidth().padding(top = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box {
                     GlassPillButton(
@@ -214,23 +214,23 @@ fun NowPlaying(
             SeekSection(position, ui.durationMs, glow, onSeek)
 
             Row(
-                Modifier.fillMaxWidth().padding(top = 10.dp),
+                Modifier.fillMaxWidth().padding(top = 7.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 GlassIconButton(
                     Icons.Rounded.Shuffle, "Shuffle", onShuffle,
-                    size = 48.dp, iconSize = 24.dp,
+                    size = 42.dp, iconSize = 21.dp,
                     tint = if (ui.shuffle) glow else Glass.TextLo, filled = ui.shuffle,
                 )
                 GlassIconButton(
                     Icons.Rounded.SkipPrevious, "Previous song", onPrevious,
-                    size = 54.dp, iconSize = 32.dp, filled = false,
+                    size = 46.dp, iconSize = 28.dp, filled = false,
                 )
                 BigPlayButton(ui.isPlaying, glow, onTogglePlay)
                 GlassIconButton(
                     Icons.Rounded.SkipNext, "Next song", onNext,
-                    size = 54.dp, iconSize = 32.dp, filled = false,
+                    size = 46.dp, iconSize = 28.dp, filled = false,
                 )
                 GlassIconButton(
                     if (ui.repeatMode == Player.REPEAT_MODE_ONE) Icons.Rounded.RepeatOne else Icons.Rounded.Repeat,
@@ -308,7 +308,7 @@ private fun formatSleepCountdown(milliseconds: Long): String {
 @Composable
 private fun SeekSection(position: State<Long>, durationMs: Long, accent: Color, onSeek: (Long) -> Unit) {
     val pos by position
-    Column(Modifier.padding(top = 14.dp)) {
+    Column(Modifier.padding(top = 10.dp)) {
         GlassSeekBar(
             progress = if (durationMs > 0) pos.toFloat() / durationMs else 0f,
             accent = accent,
@@ -332,7 +332,7 @@ private fun BigPlayButton(playing: Boolean, accent: Color, onClick: () -> Unit) 
     )
     Box(
         Modifier
-            .size(68.dp)
+            .size(60.dp)
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .background(Glass.TextHi, CircleShape)
             .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape)
@@ -360,7 +360,7 @@ fun GlassSeekBar(progress: Float, accent: Color, onSeek: (Float) -> Unit, modifi
     Canvas(
         modifier
             .fillMaxWidth()
-            .height(32.dp)
+            .height(28.dp)
             .pointerInput(Unit) {
                 detectTapGestures { o -> seek((o.x / size.width).coerceIn(0f, 1f)) }
             }
