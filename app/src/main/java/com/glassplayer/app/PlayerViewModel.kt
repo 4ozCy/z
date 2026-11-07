@@ -78,8 +78,55 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) = sync()
-    }
 
+        /**
+         * Recover from a broken/unavailable media item instead of leaving the
+         * player stuck after ExoPlayer reports an error.
+         */
+        override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+            val c = controller ?: return
+            if (c.mediaItemCount == 0) {
+                sync()
+                return
+            }
+
+            val currentIndex = c.currentMediaItemIndex
+            val nextIndex = when {
+                currentIndex in 0 until c.mediaItemCount - 1 -> currentIndex + 1
+                c.repeatMode == Player.REPEAT_MODE_ALL && c.mediaItemCount > 1 -> 0
+                else -> C.INDEX_UNSET
+            }
+
+            if (nextIndex != C.INDEX_UNSET) {
+                runCatching {
+                    c.seekToDefaultPosition(nextIndex)
+                    c.prepare()
+                    c.play()
+                }
+            }
+            sync()
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState != Player.STATE_ENDED) return
+            val c = controller ?: return
+            // Repeat ALL should keep the queue moving even if the transition
+            // occasionally fails to advance on its own.
+            if (c.mediaItemCount > 1 && c.repeatMode == Player.REPEAT_MODE_ALL) {
+                val nextIndex = if (c.currentMediaItemIndex in 0 until c.mediaItemCount - 1) {
+                    c.currentMediaItemIndex + 1
+                } else {
+                    0
+                }
+                runCatching {
+                    c.seekToDefaultPosition(nextIndex)
+                    c.prepare()
+                    c.play()
+                }
+            }
+            sync()
+        }
+    }
     init {
         val ctx = getApplication<Application>()
         val token = SessionToken(ctx, ComponentName(ctx, PlaybackService::class.java))
