@@ -167,23 +167,24 @@ private fun NavPill(
     LaunchedEffect(selected) {
         pos.animateTo(selected.toFloat(), spring(dampingRatio = 0.88f, stiffness = 340f))
     }
-    val shape = RoundedCornerShape(15.dp)
+    val shape = RoundedCornerShape(30.dp)
 
     Row(
         Modifier
             .fillMaxWidth()
-            .height(52.dp)
-            .dockGlass(shape)
+            .height(58.dp)
+            .dockGlass(shape, Color(0xFF26384B))
             .drawBehind {
                 val itemW = size.width / NavTabs.size
-                val inset = 5.dp.toPx()
+                val inset = 4.dp.toPx()
                 val w = itemW - inset * 2
                 val h = size.height - inset * 2
                 val left = (pos.value + 0.5f) * itemW - w / 2f
                 val top = (size.height - h) / 2f
+                // A clear, sliding selected capsule like a native messaging app tab bar.
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.13f), accent.copy(alpha = 0.08f)),
+                        listOf(Color(0xFF263F59), Color(0xFF1D3045)),
                         startY = top,
                         endY = top + h,
                     ),
@@ -192,22 +193,18 @@ private fun NavPill(
                     cornerRadius = CornerRadius(h / 2f),
                 )
                 drawRoundRect(
-                    brush = Brush.linearGradient(
-                        listOf(Color.White.copy(alpha = 0.11f), Color.White.copy(alpha = 0.02f), Color.White.copy(alpha = 0.06f)),
-                        start = Offset(left, top),
-                        end = Offset(left + w, top + h),
-                    ),
+                    color = Color.White.copy(alpha = 0.045f),
                     topLeft = Offset(left, top),
                     size = Size(w, h),
                     cornerRadius = CornerRadius(h / 2f),
-                    style = Stroke(width = 0.5.dp.toPx()),
+                    style = Stroke(width = 0.6.dp.toPx()),
                 )
             },
     ) {
         NavTabs.forEachIndexed { i, t ->
             val active = i == selected
             val color by animateColorAsState(
-                if (active) Glass.TextHi else Glass.TextLo,
+                if (active) Color(0xFF36A5FF) else Color(0xFFE1E6EC),
                 label = "tabColor",
             )
             Column(
@@ -224,10 +221,10 @@ private fun NavPill(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
             ) {
-                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(20.dp))
+                Icon(t.icon, contentDescription = t.label, tint = color, modifier = Modifier.size(if (active) 22.dp else 21.dp))
                 GText(
                     t.label,
-                    size = 10.sp,
+                    size = 11.sp,
                     weight = if (active) FontWeight.SemiBold else FontWeight.Medium,
                     color = color,
                     modifier = Modifier.padding(top = 2.dp),
