@@ -30,13 +30,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object Glass {
-    val Ink = Color(0xFF0E110F)
-    val Aqua = Color(0xFFA4C9AD)
-    val Blue = Color(0xFF86B9B0)
-    val Violet = Color(0xFF5D8B69)
-    val Coral = Color(0xFFC98B70)
-    val TextHi = Color(0xFFF3F5F3)
-    val TextLo = Color(0xFF9EA89E)
+    val Ink = Color(0xFF0B1018)
+    val Aqua = Color(0xFFFF7048)
+    val Blue = Color(0xFF78BCD1)
+    val Violet = Color(0xFFB7472D)
+    val Coral = Color(0xFFF3B36A)
+    val TextHi = Color(0xFFF5F1E8)
+    val TextLo = Color(0xFFA0AABA)
 }
 
 /** Bright on the top-left and bottom-right edges, nearly clear between: the "light catching glass" rim. */
@@ -112,7 +112,7 @@ fun GlassIconButton(
     Box(
         modifier
             .size(size)
-            .then(if (filled) Modifier.glassCard(CircleShape, glassTint) else Modifier.clip(CircleShape))
+            .then(if (filled) Modifier.glassCard(RoundedCornerShape(10.dp), glassTint) else Modifier.clip(RoundedCornerShape(10.dp)))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -131,7 +131,7 @@ fun GlassPillButton(
     Row(
         modifier
             .height(40.dp)
-            .glassCard(CircleShape, tint, 0.9f)
+            .glassCard(RoundedCornerShape(9.dp), tint, 0.9f)
             .clickable(onClick = onClick)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
