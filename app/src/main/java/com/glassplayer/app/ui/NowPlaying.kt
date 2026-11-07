@@ -194,7 +194,7 @@ fun NowPlaying(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 9.dp)
-                    .glassCard(RoundedCornerShape(16.dp), Color(0xFF211C31), 0.75f)
+                    .glassCard(RoundedCornerShape(16.dp), Color(0xFF212624), 0.75f)
                     .padding(horizontal = 4.dp, vertical = 9.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -328,7 +328,7 @@ private fun PlayerActionItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Icon(icon, contentDescription = title, tint = Color(0xFFC5A8FF), modifier = Modifier.size(20.dp))
+        Icon(icon, contentDescription = title, tint = Color(0xFFA4C9AD), modifier = Modifier.size(20.dp))
         GText(title, size = 10.sp, weight = FontWeight.Medium, color = Glass.TextHi)
         if (subtitle.isNotEmpty()) GText(subtitle, size = 9.sp, color = Glass.TextLo)
     }
