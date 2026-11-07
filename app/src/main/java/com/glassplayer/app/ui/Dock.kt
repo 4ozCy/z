@@ -165,13 +165,15 @@ private fun NavPill(
     LaunchedEffect(selected) {
         pos.animateTo(selected.toFloat(), spring(dampingRatio = 0.88f, stiffness = 340f))
     }
-    val shape = RoundedCornerShape(30.dp)
+    val shape = RoundedCornerShape(12.dp)
 
     Row(
         Modifier
             .fillMaxWidth()
             .height(58.dp)
-            .dockGlass(shape, Color(0xFF1D2921))
+            .clip(shape)
+            .background(Color(0xFF111722))
+            .border(1.dp, Color.White.copy(alpha = 0.06f), shape)
             .drawBehind {
                 val itemW = size.width / NavTabs.size
                 val inset = 4.dp.toPx()
@@ -182,19 +184,19 @@ private fun NavPill(
                 // A clear, sliding selected capsule like a native messaging app tab bar.
                 drawRoundRect(
                     brush = Brush.verticalGradient(
-                        listOf(Color(0xFF2C4232), Color(0xFF171C19)),
+                        listOf(Color(0xFF4B2A28), Color(0xFF161F2A)),
                         startY = top,
                         endY = top + h,
                     ),
                     topLeft = Offset(left, top),
                     size = Size(w, h),
-                    cornerRadius = CornerRadius(h / 2f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
                 )
                 drawRoundRect(
                     color = Color.White.copy(alpha = 0.045f),
                     topLeft = Offset(left, top),
                     size = Size(w, h),
-                    cornerRadius = CornerRadius(h / 2f),
+                    cornerRadius = CornerRadius(8.dp.toPx()),
                     style = Stroke(width = 0.6.dp.toPx()),
                 )
             },
@@ -202,7 +204,7 @@ private fun NavPill(
         NavTabs.forEachIndexed { i, t ->
             val active = i == selected
             val color by animateColorAsState(
-                if (active) Color(0xFFA4C9AD) else Color(0xFFE1E5DE),
+                if (active) Color(0xFFFF7048) else Glass.TextLo,
                 label = "tabColor",
             )
             Column(
